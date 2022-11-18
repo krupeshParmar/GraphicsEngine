@@ -21,7 +21,6 @@ public:
 		return m_AABBStructure;
 	}
 
-private:
 	bool CollisionTest(const Vector3& posA, iShape* shapeA, const Vector3& posB, iShape* shapeB);
 	bool CollisionTest(const Vector3& posA, Sphere* a, const Vector3& posB, Sphere* b);
 	bool CollisionTest(const Vector3& posA, Sphere* a, const Vector3& posB, AABB* b);
@@ -31,6 +30,7 @@ private:
 	//bool CollisionTest(AABB* a, AABB* b);			// Not implementing
 	//bool CollisionTest(Triangle* a, Triangle* b);	// Not implementing
 
+private:
 	std::vector<PhysicsObject*> m_PhysicsObjects;
 	std::vector<Spring*> m_Springs;
 	std::map<int, std::vector<Triangle*>> m_AABBStructure;

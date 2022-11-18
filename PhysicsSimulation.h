@@ -35,5 +35,8 @@ private:
 	PhysicsDebugRenderer* m_PhysicsDebugRenderer;
 	GameObject* m_Environment;
 	bool canMoveForward = true;
+	bool canMoveBackward = true;
+	bool canMoveUpward = true;
+	bool canMoveDownward = true;
 };
 

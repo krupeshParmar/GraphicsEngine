@@ -52,6 +52,12 @@ int TestSphereAABB(const Vector3 &center, float radius, AABB b)
 	return sqDist <= radius * radius;
 }
 
+int TestTriangleAABB(Point v0, Point v1, Point v2, AABB b)
+{
+	return 1;
+}
+
+
 Point ClosestPtPointTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
 {
 	// Check if P in vertex region outside A

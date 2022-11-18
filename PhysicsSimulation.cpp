@@ -12,9 +12,23 @@ int CalculateHashValue(float x, float y, float z)
 	assert(y + 100 > 0);
 	assert(z + 150 > 0);
 
-	hashValue += floor(x + 150) / 100 * 1000000;
-	hashValue += floor(y + 100) / 100 * 1000;
+	hashValue += floor(x + 150) / 100 * 100000;
+	hashValue += floor(y + 100) / 100 * 100;
 	hashValue += floor(z + 150) / 100;
+	
+	/**
+	* Working one:
+	*	int hashValue = 0;
+	*
+	*	assert(x + 150 > 0);
+	*	assert(y + 100 > 0);
+	*	assert(z + 150 > 0);
+	*
+	*	hashValue += floor(x + 150) / 100 * 1000000;
+	*	hashValue += floor(y + 100) / 100 * 10000;
+	*	hashValue += floor(z + 150) / 100;
+	* 
+	*/
 	/*int hashValue = 0;
 
 	assert(x + 128 > 0);
@@ -164,22 +178,114 @@ void PhysicsSimulation::Update(GLFWwindow* window,float dt)
 				+= glm::vec3(0.f, 0.f, 1.f) * 3.f * dt;
 		}
 	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		if (!canMoveBackward)
+			return;
+		m_Aircraft->transform->position += glm::vec3(0.f, 0.f, -1.f) * 3.f * dt;
+		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
+		{
+			m_AircraftBoundingBoxes[i]->transform->position 
+				+= glm::vec3(0.f, 0.f, -1.f) * 3.f * dt;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		m_Aircraft->transform->position += glm::vec3(1.f, 0.f, 0.f) * 3.f * dt;
+		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
+		{
+			m_AircraftBoundingBoxes[i]->transform->position 
+				+= glm::vec3(1.f, 0.f, 0.f) * 3.f * dt;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		m_Aircraft->transform->position += glm::vec3(-1.f, 0.f, 0.f) * 3.f * dt;
+		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
+		{
+			m_AircraftBoundingBoxes[i]->transform->position 
+				+= glm::vec3(-1.f, 0.f, 0.f) * 3.f * dt;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		if (!canMoveUpward)
+			return;
+		m_Aircraft->transform->position += glm::vec3(0.f, 1.f, 0.f) * 3.f * dt;
+		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
+		{
+			m_AircraftBoundingBoxes[i]->transform->position 
+				+= glm::vec3(0.f, 1.f, 0.f) * 3.f * dt;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		if (!canMoveDownward)
+			return;
+		m_Aircraft->transform->position += glm::vec3(0.f, -1.f, 0.f) * 3.f * dt;
+		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
+		{
+			m_AircraftBoundingBoxes[i]->transform->position 
+				+= glm::vec3(0.f, -1.f, 0.f) * 3.f * dt;
+		}
+	}
 }
 
 void PhysicsSimulation::Render()
 {
 	for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
 	{
-		int hashValue = CalculateHashValue(m_AircraftBoundingBoxes[i]->transform->position);
+		const std::map<int, std::vector<Triangle*>> aabb = m_PhysicsSystem.GetAABBStructure();
+
+		std::map<int, std::vector<Triangle*>>::const_iterator aabbIt = aabb.begin();
+		bool collision = false;
+		for (; aabbIt != aabb.end(); aabbIt++)
+		{
+			std::vector<Triangle*> triangles = (*aabbIt).second;
+			for (int j = 0; j < triangles.size(); j++) {
+				Triangle* triangle = triangles[j];
+				Sphere* sphere = new Sphere(
+					Point(
+						m_AircraftBoundingBoxes[i]->transform->position.x,
+						m_AircraftBoundingBoxes[i]->transform->position.y,
+						m_AircraftBoundingBoxes[i]->transform->position.z
+					),
+					0.1f);
+				const Vector3 spherePosition = Vector3(0);
+				const Vector3 trianglePos =	Vector3(0);
+				if (m_PhysicsSystem.CollisionTest(
+					spherePosition,
+					sphere,
+					trianglePos,
+					triangle))
+				{
+					canMoveForward = false;
+					collision = true;
+					std::cout << "Collision at " 
+						<< sphere->Center.x << ", "
+						<< sphere->Center.y << ", "
+						<< sphere->Center.z << std::endl;
+					m_PartialGameObjects[aabbIt->first]->meshObject->RGBA_color =
+						glm::vec4(1.f, 0.f, 1.f, 1.f);
+				}
+			}
+		}
+
+		if(!collision)
+		{
+			if (!canMoveForward)
+				canMoveForward = true;
+		}
+		/*int hashValue = CalculateHashValue(m_AircraftBoundingBoxes[i]->transform->position);
 		std::cout << "HashValue: " << hashValue << std::endl;
 		auto resultIt = m_PartialGameObjects.find(hashValue);
 		if (resultIt != m_PartialGameObjects.end())
 			if (resultIt->second != nullptr)
 			{
-				canMoveForward = false;
 				resultIt->second->meshObject->RGBA_color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+				resultIt->second->meshObject->isWireframe = true;
 				std::cout << "Collision at " << resultIt->second->name << std::endl;
-			}
+			}*/
 	}
 }
 
@@ -332,10 +438,7 @@ void PhysicsSimulation::LoadStaticModelToOurAABBEnvironment(const std::string& m
 		int hashA = CalculateHashValue(a);
 		int hashB = CalculateHashValue(b);
 		int hashC = CalculateHashValue(c);
-		if (a.GetGLM() == glm::vec3(0) || b.GetGLM() == glm::vec3(0) || c.GetGLM() == glm::vec3(0))
-		{
-			int break_me = 0;
-		}
+
 		//printf("(%.2f, %.2f, %.2f) -> %d\n", a.x, a.y, a.z, hashA);
 		//printf("(%.2f, %.2f, %.2f) -> %d\n", b.x, b.y, b.z, hashB);
 		//printf("(%.2f, %.2f, %.2f) -> %d\n", c.x, c.y, c.z, hashC);

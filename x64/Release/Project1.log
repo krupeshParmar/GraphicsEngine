@@ -1,9 +1,19 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(514,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (FrameworksMidTerm22.vcxproj, Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  SceneEditor.cpp
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\SceneEditor.cpp(238,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  PhysicsSimulation.cpp
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(15,36): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(16,36): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(17,30): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(109,46): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(111,21): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(137,42): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(375,19): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(377,20): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(420,20): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(370,24): warning C4101: 'unused2': unreferenced local variable
+D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(370,15): warning C4101: 'unused1': unreferenced local variable
   Generating code
-  2 of 3549 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  1 of 2839 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    130 functions had inline decision re-evaluated but remain unchanged
+    21 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> D:\KPsDocuments\GDP1\Graphics\Projects\Project1\x64\Release\GraphicsProject1.exe
