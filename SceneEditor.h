@@ -28,6 +28,8 @@ public:
 	std::string sceneName;
 	cVAOManager* mainVAOManager;
 	std::string sceneFileName = "";
+	std::string logMessages = "";
+	std::string controlsText = "";
 
 	SceneEditor();
 	~SceneEditor();

@@ -53,8 +53,8 @@ public:
 
 class Triangle : public iShape {
 public:
-	Triangle(Point a, Point b, Point c, int d)
-		: A(a), B(b), C(c), index(d) { }
+	Triangle(Point a, Point b, Point c)
+		: A(a), B(b), C(c){ }
 	virtual ~Triangle() { }
 
 	virtual ShapeType GetType() const override {
@@ -64,5 +64,5 @@ public:
 	Point A;
 	Point B;
 	Point C;
-	int index;
+
 };

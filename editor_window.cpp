@@ -183,7 +183,7 @@ int main()
 		float currentFfame = glfwGetTime();
 		deltaTime = currentFfame - lastFrame;
 		lastFrame = currentFfame;
-		ProcessInput(window);
+		if(!theSceneEditor.gamePlay) ProcessInput(window);
 
 		::g_pTheLightManager->CopyLightInformationToShader(shaderID);
 
@@ -202,10 +202,16 @@ int main()
 
 
 		glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
-
+		
 		matView = glm::lookAt(theSceneEditor.EDITOR_CAMERA->transform->position,
 			theSceneEditor.EDITOR_CAMERA->transform->position + cameraFront,
 			upVector);
+
+		if (theSceneEditor.gamePlay)
+			if(physicsSimulation->m_Aircraft != nullptr)
+				matView = glm::lookAt(theSceneEditor.EDITOR_CAMERA->transform->position,
+					physicsSimulation->m_Aircraft->transform->position,
+					upVector);
 
 		GLint eyeLocation_UniLoc = glGetUniformLocation(shaderID, "eyeLocation");
 		glUniform4f(eyeLocation_UniLoc, theSceneEditor.EDITOR_CAMERA->transform->position.x,
@@ -236,7 +242,7 @@ int main()
 				matModel = glm::mat4x4(1.0f);  // identity matrix
 			else matModel = currentGameObject->parent->matModel;
 
-		//// Rotate the object
+			//// Rotate the object
 			glm::mat4 matRoationZ = glm::rotate(glm::mat4(1.0f),
 				currentGameObject->transform->rotation.z,                // Angle to rotate
 				glm::vec3(0.0f, 0.0f, 1.0f));       // Axis to rotate around
@@ -322,6 +328,9 @@ int main()
 		{
 			physicsSimulation->Update(window, deltaTime);
 			physicsSimulation->Render();
+			if(physicsSimulation->m_Aircraft != nullptr)
+				theSceneEditor.EDITOR_CAMERA->transform->position =
+					physicsSimulation->m_Aircraft->transform->position + glm::vec3(0.f, 2.5f,-4.f);
 			theSceneEditor.GamePlayUpdate(window);
 		}
 		theSceneEditor.RenderScene(shaderID);

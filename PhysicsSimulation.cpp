@@ -69,7 +69,7 @@ PhysicsSimulation::~PhysicsSimulation()
 void PhysicsSimulation::Initialize(int ShaderId)
 {
 	//m_PhysicsDebugRenderer = new PhysicsDebugRenderer();
-
+	mainSceneEditor->controlsText = "\nW - Move Forward \nS - Move Backward\nA - Move Left\nD - Move Right\nQ - Move Down\nE- Move Up";
 	PrepareDemo();
 
 	LoadStaticModelToOurAABBEnvironment("island", 
@@ -142,11 +142,6 @@ void PhysicsSimulation::Initialize(int ShaderId)
 		{
 			drawInfo.pIndices[triangleIndex] = faces[triangleIndex];
 		}
-		
-		/*for (unsigned int triangleIndex = 0; triangleIndex != drawInfo.numberOfIndices; triangleIndex++)
-		{
-			drawInfo.pIndices[triangleIndex] = faces[triangleIndex];
-		}*/
 
 		mainSceneEditor->mainVAOManager->LoadModelIntoVAO("partialMesh" + std::to_string(hashValue),
 			drawInfo, ShaderId);
@@ -154,7 +149,6 @@ void PhysicsSimulation::Initialize(int ShaderId)
 		gameobject->meshObject->meshName = drawInfo.meshName;
 		gameobject->meshObject->bDoNotLight = true;
 		gameobject->meshObject->bUse_RGBA_color = false;
-		gameobject->meshObject->RGBA_color = glm::vec4(1.f,0.4f,1.f,1.f);
 		gameobject->meshObject->isWireframe = false;
 		gameobject->name = drawInfo.meshName;
 		gameobject->transform->Reset();
@@ -191,6 +185,8 @@ void PhysicsSimulation::Update(GLFWwindow* window,float dt)
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
+		if (!canMoveLeft)
+			return;
 		m_Aircraft->transform->position += glm::vec3(1.f, 0.f, 0.f) * 3.f * dt;
 		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
 		{
@@ -200,6 +196,8 @@ void PhysicsSimulation::Update(GLFWwindow* window,float dt)
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
+		if (!canMoveRight)
+			return;
 		m_Aircraft->transform->position += glm::vec3(-1.f, 0.f, 0.f) * 3.f * dt;
 		for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
 		{
@@ -207,7 +205,7 @@ void PhysicsSimulation::Update(GLFWwindow* window,float dt)
 				+= glm::vec3(-1.f, 0.f, 0.f) * 3.f * dt;
 		}
 	}
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
 		if (!canMoveUpward)
 			return;
@@ -218,7 +216,7 @@ void PhysicsSimulation::Update(GLFWwindow* window,float dt)
 				+= glm::vec3(0.f, 1.f, 0.f) * 3.f * dt;
 		}
 	}
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		if (!canMoveDownward)
 			return;
@@ -235,57 +233,152 @@ void PhysicsSimulation::Render()
 {
 	for (int i = 0; i < m_AircraftBoundingBoxes.size(); i++)
 	{
+		int hashOfBB = CalculateHashValue(m_AircraftBoundingBoxes[i]->transform->position);
+		int maxHashOfBB = CalculateHashValue(
+			m_AircraftBoundingBoxes[i]->transform->position + glm::vec3(10.f)
+		);
+		int minHashOfBB = CalculateHashValue(
+			m_AircraftBoundingBoxes[i]->transform->position + glm::vec3(-10.f)
+		);
 		const std::map<int, std::vector<Triangle*>> aabb = m_PhysicsSystem.GetAABBStructure();
 
 		std::map<int, std::vector<Triangle*>>::const_iterator aabbIt = aabb.begin();
-		bool collision = false;
+		bool collisionForward = false;
+		bool collisionBackward = false;
+		bool collisionRight = false;
+		bool collisionLeft = false;
+		bool collisionUpward = false;
+		bool collisionDownward = false;
 		for (; aabbIt != aabb.end(); aabbIt++)
 		{
 			std::vector<Triangle*> triangles = (*aabbIt).second;
 			for (int j = 0; j < triangles.size(); j++) {
 				Triangle* triangle = triangles[j];
-				Sphere* sphere = new Sphere(
-					Point(
-						m_AircraftBoundingBoxes[i]->transform->position.x,
-						m_AircraftBoundingBoxes[i]->transform->position.y,
-						m_AircraftBoundingBoxes[i]->transform->position.z
-					),
-					0.1f);
-				const Vector3 spherePosition = Vector3(0);
-				const Vector3 trianglePos =	Vector3(0);
-				if (m_PhysicsSystem.CollisionTest(
-					spherePosition,
-					sphere,
-					trianglePos,
-					triangle))
+				if (
+					(CalculateHashValue(triangle->A) > minHashOfBB
+						&& CalculateHashValue(triangle->A) < maxHashOfBB)
+					|| (CalculateHashValue(triangle->B) > minHashOfBB
+						&& CalculateHashValue(triangle->B) < maxHashOfBB)
+					|| (CalculateHashValue(triangle->C) > minHashOfBB
+						&& CalculateHashValue(triangle->C) < maxHashOfBB)
+					)
 				{
-					canMoveForward = false;
-					collision = true;
-					std::cout << "Collision at " 
-						<< sphere->Center.x << ", "
-						<< sphere->Center.y << ", "
-						<< sphere->Center.z << std::endl;
-					m_PartialGameObjects[aabbIt->first]->meshObject->RGBA_color =
-						glm::vec4(1.f, 0.f, 1.f, 1.f);
-				}
+					Sphere* sphere = new Sphere(
+						Point(
+							m_AircraftBoundingBoxes[i]->transform->position.x,
+							m_AircraftBoundingBoxes[i]->transform->position.y,
+							m_AircraftBoundingBoxes[i]->transform->position.z
+						),
+						0.1f);
+					const Vector3 spherePosition = Vector3(0);
+					const Vector3 trianglePos = Vector3(0);
+					if (m_PhysicsSystem.CollisionTest(
+						spherePosition,
+						sphere,
+						trianglePos,
+						triangle))
+					{
+						switch (i)
+						{
+						case 0:
+							canMoveForward = false;
+							collisionForward = true;
+							frontlight->diffuse = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							break;
+						case 1:
+							canMoveBackward = false;
+							collisionBackward = true;
+							backlight->diffuse = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							break;
+						case 2:
+							canMoveRight = false;
+							collisionRight = true;
+							rightlight->diffuse = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							break;
+						case 3:
+							canMoveLeft = false;
+							collisionLeft = true;
+							leftlight->diffuse = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							break;
+						case 4:
+							canMoveUpward = false;
+							collisionUpward = true;
+							uplight->diffuse = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							break;
+						case 5:
+							canMoveDownward = false;
+							collisionDownward = true;
+							downlight->diffuse = glm::vec4(1.f, 0.f, 0.f, 1.f);
+							break;
+						}
+						mainSceneEditor->logMessages = "Collision at "
+							+ std::to_string(sphere->Center.x) + ", "
+							+ std::to_string(sphere->Center.y) + ", "
+							+ std::to_string(sphere->Center.z);
+						std::cout << "Collision at "
+							<< sphere->Center.x << ", "
+							<< sphere->Center.y << ", "
+							<< sphere->Center.z << std::endl;
+						m_PartialGameObjects[aabbIt->first]->meshObject->RGBA_color =
+							glm::vec4(0.f, 0.f, 0.f, 1.f);
+						m_PartialGameObjects[aabbIt->first]->meshObject->bUse_RGBA_color
+							= true;
+					}
+				}	
 			}
 		}
-
-		if(!collision)
+		switch (i)
 		{
-			if (!canMoveForward)
-				canMoveForward = true;
+		case 0:
+			if (!collisionForward)
+				if (!canMoveForward)
+				{
+					canMoveForward = true;
+					frontlight->diffuse = glm::vec4(0.f, 1.f, 0.f, 1.f);
+				}
+			break;
+		case 1:
+			if(!collisionBackward)
+				if (!canMoveBackward)
+				{
+					canMoveBackward = true;
+					backlight->diffuse = glm::vec4(0.f, 1.f, 0.f, 1.f);
+				}
+			break;
+		case 2:
+			if (!collisionRight)
+				if (!canMoveRight)
+				{
+					canMoveRight = true;
+					rightlight->diffuse = glm::vec4(0.f, 1.f, 0.f, 1.f);
+				}
+			break;
+		case 3:
+			if (!collisionLeft)
+				if (!canMoveLeft)
+				{
+					canMoveLeft = true;
+					leftlight->diffuse = glm::vec4(0.f, 1.f, 0.f, 1.f);
+				}
+			break;
+		case 4:
+			if (!collisionUpward)
+				if (!canMoveUpward)
+				{
+					canMoveUpward = true;
+					uplight->diffuse = glm::vec4(0.f, 1.f, 0.f, 1.f);
+				}
+			break;
+		case 5:
+			if (!collisionDownward)
+				if (!canMoveDownward)
+				{
+					canMoveDownward = true;
+					downlight->diffuse = glm::vec4(0.f, 1.f, 0.f, 1.f);
+				}
+			break;
 		}
-		/*int hashValue = CalculateHashValue(m_AircraftBoundingBoxes[i]->transform->position);
-		std::cout << "HashValue: " << hashValue << std::endl;
-		auto resultIt = m_PartialGameObjects.find(hashValue);
-		if (resultIt != m_PartialGameObjects.end())
-			if (resultIt->second != nullptr)
-			{
-				resultIt->second->meshObject->RGBA_color = glm::vec4(1.f, 1.f, 1.f, 1.f);
-				resultIt->second->meshObject->isWireframe = true;
-				std::cout << "Collision at " << resultIt->second->name << std::endl;
-			}*/
+		
 	}
 }
 
@@ -300,64 +393,19 @@ void PhysicsSimulation::PrepareDemo()
 			m_AircraftBoundingBoxes.push_back(boundingParent->children[i]);
 		}
 	}
-	//std::vector<GameObject*> boundingBoxes = mainSceneEditor->GetGameObjectByName("BoundingBoxes")->children;
-	//for (int i = 0; i < boundingBoxes.size(); i++)
-	//{
-	//	std::vector<glm::vec3> vertices;
-	//	std::vector<int> triangles;
-
-	//	unsigned int unused1, unused2;
-
-	//	sModelDrawInfo drawInfo;
-	//	mainSceneEditor->mainVAOManager->FindDrawInfoByModelName("mig29", drawInfo);
-	//	Vector3 minPoints = Vector3(FLT_MAX, FLT_MAX, FLT_MAX);
-	//	Vector3 maxPoints = Vector3(FLT_MIN, FLT_MIN, FLT_MIN);
-	//	for (int i = 0; i < vertices.size(); i++) {
-	//		glm::vec3& vertex = vertices[i];
-
-	//		if (minPoints.x > vertex.x)
-	//			minPoints.x = vertex.x;
-	//		if (minPoints.y > vertex.y)
-	//			minPoints.y = vertex.y;
-	//		if (minPoints.z > vertex.z)
-	//			minPoints.z = vertex.z;
-
-	//		if (maxPoints.x < vertex.x)
-	//			maxPoints.x = vertex.x;
-	//		if (maxPoints.y < vertex.y)
-	//			maxPoints.y = vertex.y;
-	//		if (maxPoints.z < vertex.z)
-	//			maxPoints.z = vertex.z;
-	//	}
-
-	//	// Calculate the point halfway between the minPoints, and maxPoints
-	//	Vector3 halfExtents = (maxPoints - minPoints) / 2.f;
-	//	Vector3 centerPoint = minPoints + halfExtents;
-
-	//	printf("Minimum Points: (%.2f, %.2f, %.2f)\n",
-	//		minPoints.x,
-	//		minPoints.y,
-	//		minPoints.z);
-	//	printf("Maximum Points: (%.2f, %.2f, %.2f)\n",
-	//		maxPoints.x,
-	//		maxPoints.y,
-	//		maxPoints.z);
-	//	printf("Half Extents: (%.2f, %.2f, %.2f)\n",
-	//		halfExtents.x,
-	//		halfExtents.y,
-	//		halfExtents.z);
-	//	printf("Center Point: (%.2f, %.2f, %.2f)\n",
-	//		centerPoint.x,
-	//		centerPoint.y,
-	//		centerPoint.z);
-
-	//	m_AircraftBoundingBox.centerPoint = centerPoint;
-	//	m_AircraftBoundingBox.halfExtents = halfExtents;
-	//	m_AircraftBoundingBox.maxPoints = maxPoints;
-	//	m_AircraftBoundingBox.minPoints = minPoints;
-
-	//	m_PhysicsDebugRenderer->AddPhysicsObject(m_Aircraft);
-	//}
+	if (m_Aircraft != nullptr)
+	{
+		std::vector<GameObject*> lights = m_Aircraft->children;
+		if (lights.size() > 0)
+		{
+			frontlight = (Light*) lights[0]->components[0];
+			backlight = (Light*)lights[1]->components[0];
+			rightlight = (Light*)lights[2]->components[0];
+			leftlight = (Light*)lights[3]->components[0];
+			uplight = (Light*)lights[4]->components[0];
+			downlight = (Light*)lights[5]->components[0];
+		}
+	}
 }
 
 void PhysicsSimulation::LoadStaticModelToOurAABBEnvironment(const std::string& modelName, const Vector3& position, float scale)
@@ -407,30 +455,18 @@ void PhysicsSimulation::LoadStaticModelToOurAABBEnvironment(const std::string& m
 		minPoints.x, minPoints.y, minPoints.z,
 		maxPoints.x, maxPoints.y, maxPoints.z);
 
-	/** For rendering purposes only.. **/
-	/*m_BigShipGamObject = GDP_CreateGameObject();
-	m_BigShipGamObject->Position = pos;
-	m_BigShipGamObject->Renderer.ShaderId = 1;
-	m_BigShipGamObject->Renderer.MaterialId = g_SphereMaterialId;
-	m_BigShipGamObject->Renderer.MeshId = m_ShipModelId;
-	m_BigShipGamObject->Scale = glm::vec3(1.0f);
-	m_BigShipGamObject->Enabled = true;*/
-	/** End for rendering only **/
-
 	for (int i = 0; i < drawInfo.numberOfIndices; i += 3)
 	{
 		glm::vec3 vertex1 = glm::vec3(drawInfo.pVertices[drawInfo.pIndices[i]].x,
 			drawInfo.pVertices[drawInfo.pIndices[i]].y, 
 			drawInfo.pVertices[drawInfo.pIndices[i]].z );
 		glm::vec3 vertex2 = glm::vec3(drawInfo.pVertices[drawInfo.pIndices[i + 1]].x,
-			drawInfo.pVertices[drawInfo.pIndices[i+1]].y, 
+			drawInfo.pVertices[drawInfo.pIndices[i + 1]].y, 
 			drawInfo.pVertices[drawInfo.pIndices[i + 1]].z );
 		glm::vec3 vertex3 = glm::vec3(drawInfo.pVertices[drawInfo.pIndices[i + 2]].x,
 			drawInfo.pVertices[drawInfo.pIndices[i + 2]].y,
 			drawInfo.pVertices[drawInfo.pIndices[i + 2]].z );
-		/*glm::vec3 vertex1 = glm::vec3(vertices[i].x, vertices[i].y, vertices[i].z);
-		glm::vec3 vertex2 = glm::vec3(vertices[i + 1].x, vertices[i + 1].y, vertices[i + 1].z);
-		glm::vec3 vertex3 = glm::vec3(vertices[i + 2].x, vertices[i + 2].y, vertices[i + 2].z);*/
+
 		Point a = Point(vertex1 + pos);
 		Point b = Point(vertex2 + pos);
 		Point c = Point(vertex3 + pos);
@@ -439,11 +475,7 @@ void PhysicsSimulation::LoadStaticModelToOurAABBEnvironment(const std::string& m
 		int hashB = CalculateHashValue(b);
 		int hashC = CalculateHashValue(c);
 
-		//printf("(%.2f, %.2f, %.2f) -> %d\n", a.x, a.y, a.z, hashA);
-		//printf("(%.2f, %.2f, %.2f) -> %d\n", b.x, b.y, b.z, hashB);
-		//printf("(%.2f, %.2f, %.2f) -> %d\n", c.x, c.y, c.z, hashC);
-
-		Triangle* newTriangle = new Triangle(a, b, c, drawInfo.pIndices[i]);
+		Triangle* newTriangle = new Triangle(a, b, c);
 
 		m_PhysicsSystem.AddTriangleToAABBCollisionCheck(hashA, newTriangle);
 

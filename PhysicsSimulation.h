@@ -13,6 +13,7 @@ public:
 	PhysicsSimulation();
 	~PhysicsSimulation();
 	SceneEditor* mainSceneEditor;
+	GameObject* m_Aircraft;
 
 	void Initialize(int DemoId);
 	void Update(GLFWwindow* window,float dt);
@@ -29,7 +30,6 @@ private:
 		float scale = 1.f);
 
 	PhysicsSystem m_PhysicsSystem;
-	GameObject* m_Aircraft;
 	std::vector<GameObject*> m_AircraftBoundingBoxes;
 	std::map<int, GameObject*> m_PartialGameObjects;
 	PhysicsDebugRenderer* m_PhysicsDebugRenderer;
@@ -38,5 +38,13 @@ private:
 	bool canMoveBackward = true;
 	bool canMoveUpward = true;
 	bool canMoveDownward = true;
+	bool canMoveRight = true;
+	bool canMoveLeft = true;
+	Light* frontlight;
+	Light* backlight;
+	Light* rightlight;
+	Light* leftlight;
+	Light* uplight;
+	Light* downlight;
 };
 

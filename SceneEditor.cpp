@@ -88,7 +88,16 @@ void SceneEditor::RenderScene(GLuint shaderID)
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-
+	ImGui::Begin("Log");
+	ImGui::BeginChild("##log", ImVec2(600, 100));
+	ImGui::Text(logMessages.c_str());
+	ImGui::EndChild();
+	ImGui::End();
+	ImGui::Begin("Controls");
+	ImGui::BeginChild("##controls", ImVec2(600, 300));
+	ImGui::Text(controlsText.c_str());
+	ImGui::EndChild();
+	ImGui::End();
 	ImGui::Begin("Hierarchy");
 	ImGui::BeginChild("##pauseplay", ImVec2(100, 30));
 	ImGui::Checkbox("GamePlay##gameplay", &gamePlay);
