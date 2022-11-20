@@ -69,7 +69,7 @@ PhysicsSimulation::~PhysicsSimulation()
 void PhysicsSimulation::Initialize(int ShaderId)
 {
 	//m_PhysicsDebugRenderer = new PhysicsDebugRenderer();
-	mainSceneEditor->controlsText = "\nW - Move Forward \nS - Move Backward\nA - Move Left\nD - Move Right\nQ - Move Down\nE- Move Up";
+	mainSceneEditor->controlsText = "Island is 130K triangles and Aircraft is 6K triangles\nCheck Gameplay checkbox to play the scene\nW - Move Forward \nS - Move Backward\nA - Move Left\nD - Move Right\nQ - Move Down\nE - Move Up";
 	PrepareDemo();
 
 	LoadStaticModelToOurAABBEnvironment("island", 

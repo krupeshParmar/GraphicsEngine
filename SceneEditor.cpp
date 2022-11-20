@@ -94,7 +94,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 	ImGui::EndChild();
 	ImGui::End();
 	ImGui::Begin("Controls");
-	ImGui::BeginChild("##controls", ImVec2(600, 300));
+	ImGui::BeginChild("##controls", ImVec2(1200, 150));
 	ImGui::Text(controlsText.c_str());
 	ImGui::EndChild();
 	ImGui::End();

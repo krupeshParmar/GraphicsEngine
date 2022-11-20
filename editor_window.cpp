@@ -3,13 +3,14 @@
 *	Student number:	1124374
 *	Student mail:	k_parmar180076@fanshaweonline.ca
 *	Program name:	GAME DEVELOPMENT ADVANCED PROGRAMMING
-*	Course name:	INFO-6028 - Graphics - 1
+*	Course name:	INFO-6019 - Physics & Simulation I
 *	
-*					Graphics Project 1
+*					Physics Project 2
+*		Large Mesh Objects Collision Detection
 *	
 *	a) How to build this project:
 *		- Select x64 platform
-*		- Select Debug or Release configuration
+*		- Select Release configuration for best performance
 *		- Right click on "GraphicsProject1" from Solution Explorer and hit build
 *		- The build is now created for selected platform
 *	
@@ -20,6 +21,7 @@
 *		- Hold right click to interact with camera
 *		- While right click is held down use WASD keys to move camera
 *		- Hold down shift key to move faster
+*		- The Game Play inputs are mentioned in the editor window
 */
 
 #include "inc_opengl.h"
