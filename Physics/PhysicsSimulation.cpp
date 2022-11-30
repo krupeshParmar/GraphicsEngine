@@ -1,5 +1,5 @@
 #include "PhysicsSimulation.h"
-#include "VAOManager/VAOManager.h"
+#include "../VAOManager/VAOManager.h"
 
 
 // Helper Functions

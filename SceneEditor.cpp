@@ -1,4 +1,8 @@
 #include "SceneEditor.h"
+#include "Physics/BoundingBox/BoundingBox.h"
+#include "BoxCollider.h"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 GameObject* SceneEditor::EDITOR_CAMERA = nullptr;
 GameObject* SceneEditor::selectedGameObject = nullptr;
@@ -193,6 +197,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 			this->DuplicateGameObject(selectedGameObject);
 		}
 
+
 		ImGui::Separator();
 		{
 			ImGui::BulletText("Transform");
@@ -333,6 +338,16 @@ void SceneEditor::RenderScene(GLuint shaderID)
 					ImGui::InputFloat("Z_P2", &light->param2.z);
 				}
 			}
+			if (component->componentType == "boxcollider")
+			{
+				glm::vec3 scale = selectedGameObject->meshObject->halfExtent;
+				glm::mat4 TranslationMatrix = glm::translate(glm::mat4(1.0), 
+					selectedGameObject->transform->position);
+				glm::mat4 RotationMatrix = glm::mat4_cast(glm::quat(1, 0, 0, 0));
+				glm::mat4 ScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale.x, scale.y, scale.z));
+				glm::mat4 ModelMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
+
+			}
 		}
 		ImGui::Separator();
 		if (selectedGameObject->meshObject == nullptr)
@@ -374,10 +389,13 @@ void SceneEditor::RenderScene(GLuint shaderID)
 		}
 
 		bool hasLight = false;
+		bool hasBoxCollider = false;
 		for (int l = 0; l < selectedGameObject->components.size(); l++)
 		{
 			if (selectedGameObject->components[l]->componentType == "light")
 				hasLight = true;
+			if (selectedGameObject->components[l]->componentType == "boxcollider")
+				hasBoxCollider = true;
 		}
 		if (!hasLight)
 		{
@@ -389,6 +407,18 @@ void SceneEditor::RenderScene(GLuint shaderID)
 				::g_pTheLightManager->AddNewLightInfo(light);
 				::g_pTheLightManager->LoadLightUniformLocation(shaderID);
 				selectedGameObject->components.push_back(light);
+			}
+		}
+		if (!hasBoxCollider && selectedGameObject->meshObject != nullptr)
+		{
+			ImGui::Separator();
+			ImGui::Button("Add Box Collider");
+			if (ImGui::IsItemClicked())
+			{
+				BoxCollider* boxCollider = new BoxCollider();
+				sModelDrawInfo modelDrawInfo;
+				if (this->LoadPlyFiles(boxCollider->box_model_path, modelDrawInfo))
+					this->mainVAOManager->LoadModelIntoVAO("boxcollider", modelDrawInfo, shaderID);
 			}
 		}
 
@@ -529,13 +559,32 @@ bool SceneEditor::LoadPlyFiles(std::string fileName, sModelDrawInfo& modelDrawIn
 	theFile.close();
 
 	modelDrawInfo.pVertices = new sVertex[modelDrawInfo.numberOfVertices];
-
+	glm::vec3 minPoints = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+	glm::vec3 maxPoints = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
 	for (unsigned int index = 0; index != modelDrawInfo.numberOfVertices; index++)
 	{
 		// To shader								from File
 		modelDrawInfo.pVertices[index].x = pTheModelArray[index].x;
 		modelDrawInfo.pVertices[index].y = pTheModelArray[index].y;
 		modelDrawInfo.pVertices[index].z = pTheModelArray[index].z;
+
+		if (minPoints.x > pTheModelArray[index].x)
+			minPoints.x = pTheModelArray[index].x;
+		
+		if (minPoints.y > pTheModelArray[index].y)
+			minPoints.y = pTheModelArray[index].y;
+		
+		if (minPoints.z > pTheModelArray[index].z)
+			minPoints.z = pTheModelArray[index].z;
+
+		if (maxPoints.x < pTheModelArray[index].x)
+			maxPoints.x = pTheModelArray[index].x;
+			
+		if (maxPoints.y < pTheModelArray[index].y)
+			maxPoints.y = pTheModelArray[index].y;
+			
+		if (maxPoints.z < pTheModelArray[index].z)
+			maxPoints.z = pTheModelArray[index].z;
 
 		modelDrawInfo.pVertices[index].r = pTheModelArray[index].red;
 		modelDrawInfo.pVertices[index].g = pTheModelArray[index].green;
@@ -999,6 +1048,10 @@ bool SceneEditor::LoadSceneFile(cVAOManager* pVAOManager, GLuint shaderID)
 					sModelDrawInfo modelDrawInfo;
 					if(this->LoadPlyFiles(meshObject->path, modelDrawInfo))
 						pVAOManager->LoadModelIntoVAO(meshObject->meshName, modelDrawInfo, shaderID);
+					meshObject->minPoint = modelDrawInfo.minValues;
+					meshObject->maxPoint = modelDrawInfo.maxValues;
+					meshObject->halfExtent = (meshObject->maxPoint - meshObject->minPoint) / 2.f;
+					meshObject->centerPoint = meshObject->minPoint + meshObject->halfExtent;
 					gameObject->meshObject = meshObject;
 				}
 				if (nodeName == "children")

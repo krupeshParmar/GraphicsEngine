@@ -19,7 +19,8 @@ public:
 	bool isWireframe;
 
 	glm::vec4 RGBA_color;
-
+	glm::vec3 minPoint, maxPoint;
+	glm::vec3 halfExtent, centerPoint;
 	bool bUse_RGBA_color;
 	bool bDoNotLight;
 

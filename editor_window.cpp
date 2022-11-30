@@ -3,15 +3,12 @@
 *	Student number:	1124374
 *	Student mail:	k_parmar180076@fanshaweonline.ca
 *	Program name:	GAME DEVELOPMENT ADVANCED PROGRAMMING
-*	Course name:	INFO-6019 - Physics & Simulation I
-*	
-*					Physics Project 2
-*		Large Mesh Objects Collision Detection
+*	Course name:	
 *	
 *	a) How to build this project:
 *		- Select x64 platform
 *		- Select Release configuration for best performance
-*		- Right click on "GraphicsProject1" from Solution Explorer and hit build
+*		- Right click on "GraphicsEngine" from Solution Explorer and hit build
 *		- The build is now created for selected platform
 *	
 *	b) How to run this project:
@@ -48,7 +45,7 @@
 #include "GameObject/GameObject.h"
 #include "System/Components/Camera.h"
 #include "SceneEditor.h"
-#include "PhysicsSimulation.h"
+#include "System/AudioManager.h"
 
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -100,9 +97,7 @@ int main()
 {
 	std::cout << "Booting up..." << std::endl;
 	theSceneEditor = SceneEditor();
-	PhysicsSimulation* physicsSimulation = new PhysicsSimulation();
-	/*EDITOR_CAMERA->components["Camera"] = new Camera();
-	EDITOR_CAMERA->transform->position = glm::vec3(0.f, 0.f, -25.f);*/
+	//AudioManager audioManager;
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 
@@ -128,7 +123,11 @@ int main()
 	glfwSwapInterval(1);
 
 	theSceneEditor.InitSceneRender(window);
-	
+	/*if (audioManager.Initialize(255, FMOD_INIT_NORMAL))
+	{
+		return -1;
+	}*/
+
 	GLuint vertex_buffer = 0;
 	GLuint shaderID = 0;
 	GLint vpos_location = 0;
@@ -164,11 +163,10 @@ int main()
 	::g_pTheLightManager->LoadLightUniformLocation(shaderID);
 
 	cVAOManager* pVAOManager = new cVAOManager();
-	theSceneEditor.sceneFileName = "Scenes/PhysicsProject2.xml";
+	theSceneEditor.sceneFileName = "Scenes/GraphicsProject1.xml";
 	if (theSceneEditor.LoadSceneFile(pVAOManager, shaderID))
 	{
 		std::cout << "Scene successfully loaded!" << std::endl;
-		physicsSimulation->mainSceneEditor = &theSceneEditor;
 	}
 	else std::cout << "Scene failed to load!" << std::endl;
 
@@ -179,7 +177,6 @@ int main()
 
 	GLint mModelInverseTransform_location = glGetUniformLocation(shaderID, "mModelInverseTranspose");
 	cameraRight = glm::normalize(glm::cross(cameraFront, WorldUp));
-	physicsSimulation->Initialize(shaderID);
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentFfame = glfwGetTime();
@@ -208,12 +205,6 @@ int main()
 		matView = glm::lookAt(theSceneEditor.EDITOR_CAMERA->transform->position,
 			theSceneEditor.EDITOR_CAMERA->transform->position + cameraFront,
 			upVector);
-
-		if (theSceneEditor.gamePlay)
-			if(physicsSimulation->m_Aircraft != nullptr)
-				matView = glm::lookAt(theSceneEditor.EDITOR_CAMERA->transform->position,
-					physicsSimulation->m_Aircraft->transform->position,
-					upVector);
 
 		GLint eyeLocation_UniLoc = glGetUniformLocation(shaderID, "eyeLocation");
 		glUniform4f(eyeLocation_UniLoc, theSceneEditor.EDITOR_CAMERA->transform->position.x,
@@ -328,11 +319,6 @@ int main()
 		}
 		if (theSceneEditor.gamePlay)
 		{
-			physicsSimulation->Update(window, deltaTime);
-			physicsSimulation->Render();
-			if(physicsSimulation->m_Aircraft != nullptr)
-				theSceneEditor.EDITOR_CAMERA->transform->position =
-					physicsSimulation->m_Aircraft->transform->position + glm::vec3(0.f, 2.5f,-4.f);
 			theSceneEditor.GamePlayUpdate(window);
 		}
 		theSceneEditor.RenderScene(shaderID);

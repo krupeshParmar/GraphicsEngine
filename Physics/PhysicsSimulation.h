@@ -1,12 +1,12 @@
 #pragma once
-#include "inc_opengl.h"
+#include "../inc_opengl.h"
 #include <string>
-#include "Physics/Vector3.h"
-#include "Physics/PhysicsObject.h"
-#include "Physics/PhysicsSystem.h"
-#include "GameObject/GameObject.h"
-#include "SceneEditor.h"
-#include "Physics/PhysicsDebugRenderer.h"
+#include "../Physics/Vector3.h"
+#include "../Physics/PhysicsObject.h"
+#include "../Physics/PhysicsSystem.h"
+#include "../GameObject/GameObject.h"
+#include "../SceneEditor.h"
+#include "../Physics/PhysicsDebugRenderer.h"
 class PhysicsSimulation
 {
 public:

@@ -36,8 +36,6 @@ struct sModelDrawInfo
 
 	glm::vec3 maxValues;
 	glm::vec3 minValues;
-
-	float maxExtent;
 };
 
 class cVAOManager {
