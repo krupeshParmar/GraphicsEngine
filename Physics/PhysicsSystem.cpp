@@ -1,5 +1,8 @@
 #include "PhysicsSystem.h"
 #include "PhysicsUtils.h"
+#include "../System/Components/RigidBody.h"
+#include "../System/Components/BoxCollider.h"
+#include <iostream>
 
 PhysicsSystem::PhysicsSystem() {
 }
@@ -9,6 +12,10 @@ PhysicsSystem::~PhysicsSystem() {
 		delete m_PhysicsObjects[i];
 	}
 	m_PhysicsObjects.clear();
+	for (int i = 0; i < m_GameObjects.size(); i++) {
+		delete m_GameObjects[i];
+	}
+	m_GameObjects.clear();
 
 	// delete[] m_Particles[0];		Can check if this works (Not sure)
 	//  -> edit: Nope, use this for array of pointers
@@ -88,6 +95,86 @@ void PhysicsSystem::UpdateStep(float duration) {
 
 	for (int i = 0; i < numPhysicsObjects; i++) {
 		m_PhysicsObjects[i]->KillAllForces();
+	}
+}
+
+void PhysicsSystem::Update(float time)
+{
+	for (GameObject* gameObject : m_GameObjects)
+	{
+		//Get rigidbody and boxCollider of gameObject
+		RigidBody* rigidBody = nullptr;
+		BoxCollider* boxCollider = nullptr;
+		for (int i = 0; i < gameObject->components.size(); i++)
+		{
+			if (gameObject->components[i]->componentType == "rigidbody")
+			{
+				rigidBody = (RigidBody*)gameObject->components[i];
+			}
+			if (gameObject->components[i]->componentType == "boxcollider")
+			{
+				boxCollider = (BoxCollider*)gameObject->components[i];
+			}
+		}
+		if (!rigidBody)
+			continue;
+
+		// There might be some rigidbody related task that can be done
+		// however, for collision we do need the box collider
+		if (!boxCollider)
+			continue;
+		for (GameObject* testGameObject : m_GameObjects)
+		{
+			if (gameObject == testGameObject)
+				continue;
+
+			RigidBody* testRigidBody = nullptr;
+			BoxCollider* testBoxCollider = nullptr;
+			for (int i = 0; i < testGameObject->components.size(); i++)
+			{
+				if (testGameObject->components[i]->componentType == "rigidbody")
+				{
+					testRigidBody = (RigidBody*)testGameObject->components[i];
+				}
+				if (testGameObject->components[i]->componentType == "boxcollider")
+				{
+					testBoxCollider = (BoxCollider*)testGameObject->components[i];
+				}
+			}
+
+			if (!testRigidBody)
+				continue;
+
+			// There might be some rigidbody related task that can be done
+			// however, for collision we do need the box collider
+			if (!testBoxCollider)
+				continue;
+				/*a.minX <= b.maxX &&
+				a.maxX >= b.minX &&
+				a.minY <= b.maxY &&
+				a.maxY >= b.minY &&
+				a.minZ <= b.maxZ &&
+				a.maxZ >= b.minZ*/
+			glm::vec3 a_min = gameObject->meshObject->minPoint + gameObject->transform->position;
+			glm::vec3 a_max = gameObject->meshObject->maxPoint + gameObject->transform->position;
+			glm::vec3 b_min = testGameObject->meshObject->minPoint + testGameObject->transform->position;
+			glm::vec3 b_max = testGameObject->meshObject->maxPoint + testGameObject->transform->position;
+			std::cout << "A min: " << a_min.x << ", " << a_min.y << ", " << a_min.z << std::endl;
+			std::cout << "A max: " << a_max.x << ", " << a_max.y << ", " << a_max.z << std::endl;
+			std::cout << "B min: " << b_min.x << ", " << b_min.y << ", " << b_min.z << std::endl;
+			std::cout << "B max: " << b_max.x << ", " << b_max.y << ", " << b_max.z << std::endl;
+			if (
+				(a_min.x <= b_max.x &&
+				a_max.x >= b_min.x) &&
+				(a_min.y <= b_max.y &&
+				a_max.y >= b_min.y) &&
+				(a_min.z <= b_max.z &&
+				a_max.z >= b_min.z)
+				)
+			{
+				gameObject->OnCollisionEnter(testGameObject);
+			}
+		}
 	}
 }
 

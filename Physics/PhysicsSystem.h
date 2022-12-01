@@ -6,15 +6,18 @@
 #include <vector>
 #include "Spring.h"
 #include "Shapes.h"
+#include "../GameObject/GameObject.h"
 
 class PhysicsSystem {
 public:
 	PhysicsSystem();
 	~PhysicsSystem();
+	std::vector<GameObject*> m_GameObjects;
 
 	PhysicsObject* CreatePhysicsObject(const Vector3& position, iShape* shape);
 	void AddSpring(Spring* spring);
 	void UpdateStep(float duration);
+	void Update(float time);
 	void AddTriangleToAABBCollisionCheck(int hash, Triangle* triangle);
 
 	const std::map<int, std::vector<Triangle*>>& GetAABBStructure() {

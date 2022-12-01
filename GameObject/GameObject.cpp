@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include <iostream>
 
 void GameObject::Update()
 {
@@ -16,6 +17,11 @@ void GameObject::Update()
 	{
 		components[i]->Update(porosc);
 	}
+}
+
+void GameObject::OnCollisionEnter(GameObject* otherGameObject)
+{
+	std::cout << this->name << " collided with " << otherGameObject->name;
 }
 
 GameObject::GameObject()

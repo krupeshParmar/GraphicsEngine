@@ -27,6 +27,7 @@ public:
 	std::string name;
 
 	void Update();
+	void OnCollisionEnter(GameObject* otherGameObject);
 
 	GameObject();
 	GameObject(MeshObject* mesh);

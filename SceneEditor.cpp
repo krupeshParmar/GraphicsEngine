@@ -1,8 +1,9 @@
 #include "SceneEditor.h"
 #include "Physics/BoundingBox/BoundingBox.h"
-#include "BoxCollider.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include "System/Components/RigidBody.h"
 
 GameObject* SceneEditor::EDITOR_CAMERA = nullptr;
 GameObject* SceneEditor::selectedGameObject = nullptr;
@@ -19,6 +20,7 @@ SceneEditor::~SceneEditor()
 
 bool SceneEditor::InitSceneRender(GLFWwindow* window)
 {
+	physicsSystem = PhysicsSystem();
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& imGuiIO = ImGui::GetIO();
@@ -30,6 +32,87 @@ bool SceneEditor::InitSceneRender(GLFWwindow* window)
 	ImGui::StyleColorsDark();
 	return true;
 }
+
+
+void SceneEditor::ProcessInput(GLFWwindow* window)
+{
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+		mouseHoldDown = true;
+	else mouseHoldDown = false;
+
+	if (mouseHoldDown)
+	{
+		float cameraSpeed;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+			cameraSpeed = 10.5f * deltaTime;
+		else  cameraSpeed = 2.5f * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			EDITOR_CAMERA->transform->position += cameraSpeed * cameraFront;
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			EDITOR_CAMERA->transform->position -= cameraSpeed * cameraFront;
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			EDITOR_CAMERA->transform->position -= cameraRight * cameraSpeed;
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			EDITOR_CAMERA->transform->position += cameraRight * cameraSpeed;
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     // Down
+		{
+			SceneEditor::EDITOR_CAMERA->transform->position.y -= cameraSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)      // Up
+		{
+			SceneEditor::EDITOR_CAMERA->transform->position.y += cameraSpeed;
+		}
+	}
+}
+
+
+void SceneEditor::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = xpos;
+	lastY = ypos;
+	if (mouseHoldDown)
+		ProcessMouseMovement(xoffset, yoffset);
+}
+
+void SceneEditor::ProcessMouseMovement(float xoffset, float yoffset)
+{
+	xoffset *= SENSITIVITY;
+	yoffset *= SENSITIVITY;
+
+	YAW += xoffset;
+	PITCH += yoffset;
+
+	// make sure that when pitch is out of bounds, screen doesn't get flipped
+	if (PITCH > 89.9f)
+		PITCH = 89.9f;
+	if (PITCH < -89.9f)
+		PITCH = -89.9f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(YAW)) * cos(glm::radians(PITCH));
+	direction.y = sin(glm::radians(PITCH));
+	direction.z = sin(glm::radians(YAW)) * cos(glm::radians(PITCH));
+	cameraFront = glm::normalize(direction);
+	cameraRight = glm::normalize(glm::cross(cameraFront, WorldUp));
+	cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
+
+	// update Front, Right and Up Vectors using the updated Euler angles
+
+}
+
 
 void SceneEditor::DuplicateGameObject(GameObject* gameobject)
 {
@@ -66,6 +149,7 @@ GameObject* SceneEditor::CreateNewGameObject(std::string name)
 	list_GameObjects.push_back(gameObject);
 	return gameObject;
 }
+
 void SceneEditor::DeleteGameObjects(std::vector<GameObject*> gameobjectList)
 {
 	for (int i = 0; i < gameobjectList.size(); i++)
@@ -87,7 +171,186 @@ void SceneEditor::GamePlayUpdate(GLFWwindow* window)
 	
 }
 
-void SceneEditor::RenderScene(GLuint shaderID)
+void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
+{
+	GLint mvp_location = glGetUniformLocation(shaderID, "MVP");
+	GLint mModel_location = glGetUniformLocation(shaderID, "mModel");
+	GLint mView_location = glGetUniformLocation(shaderID, "mView");
+	GLint mProjection_location = glGetUniformLocation(shaderID, "mProjection");
+
+	GLint mModelInverseTransform_location = glGetUniformLocation(shaderID, "mModelInverseTranspose");
+
+	cameraRight = glm::normalize(glm::cross(cameraFront, WorldUp));
+	while (!glfwWindowShouldClose(window))
+	{
+		float currentFfame = glfwGetTime();
+		deltaTime = currentFfame - lastFrame;
+		lastFrame = currentFfame;
+		if (!gamePlay) ProcessInput(window);
+
+		::g_pTheLightManager->CopyLightInformationToShader(shaderID);
+
+		float ratio;
+		int width, height;
+
+		glm::mat4x4 matModel;
+		glm::mat4x4 matProjection;
+		glm::mat4x4 matView;
+
+		glfwGetFramebufferSize(window, &width, &height);
+		ratio = width / (float)height;
+
+		glViewport(0, 0, width, height);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		matView = glm::lookAt(EDITOR_CAMERA->transform->position,
+			EDITOR_CAMERA->transform->position + cameraFront,
+			upVector);
+
+		GLint eyeLocation_UniLoc = glGetUniformLocation(shaderID, "eyeLocation");
+		glUniform4f(eyeLocation_UniLoc, EDITOR_CAMERA->transform->position.x,
+			EDITOR_CAMERA->transform->position.y, EDITOR_CAMERA->transform->position.z, 1.0f);
+
+		matProjection = glm::perspective(
+			0.6f,
+			ratio,
+			0.1f,
+			10000.0f);
+
+		for (std::vector<GameObject*>::iterator itCurrentGameObject = list_GameObjects.begin();
+			itCurrentGameObject != list_GameObjects.end();
+			itCurrentGameObject++)
+		{
+			//MeshObject* currentMeshObject = *itCurrentMesh;
+			GameObject* currentGameObject = *itCurrentGameObject;
+			if (!currentGameObject->enabled)
+				continue;
+			if (currentGameObject->parent != nullptr)
+				if (!currentGameObject->parent->enabled)
+					continue;
+			glCullFace(GL_BACK);
+
+			glEnable(GL_DEPTH_TEST);
+
+			if (currentGameObject->parent == nullptr)
+				matModel = glm::mat4x4(1.0f);  // identity matrix
+			else matModel = currentGameObject->parent->matModel;
+
+			//// Rotate the object
+			glm::mat4 matRoationZ = glm::rotate(glm::mat4(1.0f),
+				currentGameObject->transform->rotation.z,                // Angle to rotate
+				glm::vec3(0.0f, 0.0f, 1.0f));       // Axis to rotate around
+
+			glm::mat4 matRoationY = glm::rotate(glm::mat4(1.0f),
+				currentGameObject->transform->rotation.y,                // Angle to rotate
+				glm::vec3(0.0f, 1.0f, 0.0f));       // Axis to rotate around
+
+			glm::mat4 matRoationX = glm::rotate(glm::mat4(1.0f),
+				currentGameObject->transform->rotation.x,                // Angle to rotate
+				glm::vec3(1.0f, 0.0f, 0.0f));       // Axis to rotate around
+
+
+			// Move the object 
+			glm::mat4 matTranslation = glm::translate(glm::mat4(1.0f),
+				currentGameObject->transform->position);
+
+
+			// Scale the object
+			glm::mat4 matScale = glm::scale(glm::mat4(1.0f),
+				glm::vec3(currentGameObject->transform->scale));
+
+			// Applying all these transformations to the MODEL 
+			// (or "world" matrix)
+			matModel = matModel * matTranslation;
+
+			matModel = matModel * matRoationX;
+			matModel = matModel * matRoationY;
+			matModel = matModel * matRoationZ;
+
+			matModel = matModel * matScale;
+
+			currentGameObject->matModel = matModel;
+
+			glUniformMatrix4fv(mModel_location, 1, GL_FALSE, glm::value_ptr(matModel));
+			glUniformMatrix4fv(mView_location, 1, GL_FALSE, glm::value_ptr(matView));
+			glUniformMatrix4fv(mProjection_location, 1, GL_FALSE, glm::value_ptr(matProjection));
+
+			// Inverse transpose of a 4x4 matrix removes the right column and lower row
+			// Leaving only the rotation (the upper left 3x3 matrix values)
+			glm::mat4 mModelInverseTransform = glm::inverse(glm::transpose(matModel));
+			glUniformMatrix4fv(mModelInverseTransform_location, 1, GL_FALSE, glm::value_ptr(mModelInverseTransform));
+
+			if (currentGameObject->meshObject->isWireframe)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			GLint RGBA_COLOR_ULocID = glGetUniformLocation(shaderID, "RGBA_Colour");
+
+			glUniform4f(RGBA_COLOR_ULocID,
+				currentGameObject->meshObject->RGBA_color.r,
+				currentGameObject->meshObject->RGBA_color.g,
+				currentGameObject->meshObject->RGBA_color.b,
+				currentGameObject->meshObject->RGBA_color.w);
+
+			GLint bUseRGBA_Color_ULocID = glGetUniformLocation(shaderID, "bUseRGBA_Colour");
+
+			if (currentGameObject->meshObject->bUse_RGBA_color)
+				glUniform1f(bUseRGBA_Color_ULocID, (GLfloat)GL_TRUE);
+			else
+				glUniform1f(bUseRGBA_Color_ULocID, (GLfloat)GL_FALSE);
+
+			GLint bDoNotLight_Colour_ULocID = glGetUniformLocation(shaderID, "bDoNotLight");
+			if (currentGameObject->meshObject->bDoNotLight)
+				glUniform1f(bDoNotLight_Colour_ULocID, (GLfloat)GL_TRUE);
+			else
+				glUniform1f(bDoNotLight_Colour_ULocID, (GLfloat)GL_FALSE);
+
+			sModelDrawInfo drawingInformation;
+			if (mainVAOManager->FindDrawInfoByModelName(currentGameObject->meshObject->meshName, drawingInformation))
+			{
+				glBindVertexArray(drawingInformation.VAO_ID);
+
+				glDrawElements(GL_TRIANGLES,
+					drawingInformation.numberOfIndices,
+					GL_UNSIGNED_INT,
+					(void*)0);
+
+				glBindVertexArray(0);
+			}
+
+			for (int c = 0; c < currentGameObject->components.size(); c++)
+			{
+				if (currentGameObject->components[c]->componentType == "boxcollider")
+				{
+					this->DrawGizmos(window, shaderID, matView, matProjection, currentGameObject,c, 0);
+				}
+			}
+		}
+		this->physicsSystem.Update(deltaTime);
+		this->RenderUI(shaderID);
+		if (gamePlay)
+		{
+			GamePlayUpdate(window);
+		}
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+		std::stringstream ssTitle;
+		ssTitle << "Camera (x,y,z): "
+			<< EDITOR_CAMERA->transform->position.x << ", "
+			<< EDITOR_CAMERA->transform->position.y << ", "
+			<< EDITOR_CAMERA->transform->position.z;
+
+		std::string theText = ssTitle.str();
+
+		glfwSetWindowTitle(window, ssTitle.str().c_str());
+	}
+	
+}
+
+void SceneEditor::RenderUI(GLuint shaderID)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -117,7 +380,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 	int i = 0;
 	/*if (ImGui::CollapsingHeader(sceneFileName.c_str()))
 	{
-		
+
 	}*/
 	for (std::vector<GameObject*>::iterator gameObjectsIterator = list_GameObjects.begin();
 		gameObjectsIterator != list_GameObjects.end();
@@ -204,7 +467,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 			{
 				ImGui::Text("Position");
 				ImGui::SameLine();
-				float pos[3] = { 
+				float pos[3] = {
 				selectedGameObject->transform->position.x,
 				selectedGameObject->transform->position.y,
 				selectedGameObject->transform->position.z };
@@ -217,7 +480,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 				ImGui::Text("Rotation");
 				ImGui::SameLine();
 
-				float rot[3] = { 
+				float rot[3] = {
 				selectedGameObject->transform->rotation.x,
 				selectedGameObject->transform->rotation.y,
 				selectedGameObject->transform->rotation.z };
@@ -231,7 +494,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 				ImGui::Text("Scale");
 				ImGui::SameLine();
 
-				float sca[3] = { 
+				float sca[3] = {
 				selectedGameObject->transform->scale.x,
 				selectedGameObject->transform->scale.y,
 				selectedGameObject->transform->scale.z };
@@ -288,7 +551,7 @@ void SceneEditor::RenderScene(GLuint shaderID)
 					if (ImGui::IsItemDeactivated()) {
 						if (selectedGameObject->children[i] != nullptr &&
 							selectedGameObject->children[i]->name != "")
-						{	
+						{
 							selectedGameObject->children[i] = this->GetGameObjectByName(childrenNames[i]);
 							selectedGameObject->children[i]->parent = selectedGameObject;
 						}
@@ -340,12 +603,6 @@ void SceneEditor::RenderScene(GLuint shaderID)
 			}
 			if (component->componentType == "boxcollider")
 			{
-				glm::vec3 scale = selectedGameObject->meshObject->halfExtent;
-				glm::mat4 TranslationMatrix = glm::translate(glm::mat4(1.0), 
-					selectedGameObject->transform->position);
-				glm::mat4 RotationMatrix = glm::mat4_cast(glm::quat(1, 0, 0, 0));
-				glm::mat4 ScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale.x, scale.y, scale.z));
-				glm::mat4 ModelMatrix = TranslationMatrix * RotationMatrix * ScaleMatrix;
 
 			}
 		}
@@ -390,12 +647,15 @@ void SceneEditor::RenderScene(GLuint shaderID)
 
 		bool hasLight = false;
 		bool hasBoxCollider = false;
+		bool hasRigidBody = false;
 		for (int l = 0; l < selectedGameObject->components.size(); l++)
 		{
 			if (selectedGameObject->components[l]->componentType == "light")
 				hasLight = true;
 			if (selectedGameObject->components[l]->componentType == "boxcollider")
 				hasBoxCollider = true;
+			if (selectedGameObject->components[l]->componentType == "rigidbody")
+				hasRigidBody = true;
 		}
 		if (!hasLight)
 		{
@@ -409,6 +669,17 @@ void SceneEditor::RenderScene(GLuint shaderID)
 				selectedGameObject->components.push_back(light);
 			}
 		}
+		if (!hasRigidBody)
+		{
+			ImGui::Separator();
+			ImGui::Button("Add Rigidbody component");
+			if (ImGui::IsItemClicked())
+			{
+				RigidBody* rigidbody = new RigidBody();
+				physicsSystem.m_GameObjects.push_back(selectedGameObject);
+				selectedGameObject->components.push_back(rigidbody);
+			}
+		}
 		if (!hasBoxCollider && selectedGameObject->meshObject != nullptr)
 		{
 			ImGui::Separator();
@@ -417,8 +688,14 @@ void SceneEditor::RenderScene(GLuint shaderID)
 			{
 				BoxCollider* boxCollider = new BoxCollider();
 				sModelDrawInfo modelDrawInfo;
-				if (this->LoadPlyFiles(boxCollider->box_model_path, modelDrawInfo))
-					this->mainVAOManager->LoadModelIntoVAO("boxcollider", modelDrawInfo, shaderID);
+				if (!this->mainVAOManager->FindDrawInfoByModelName("boxcollider", modelDrawInfo))
+				{
+					if (this->LoadPlyFiles(boxCollider->box_model_path, modelDrawInfo))
+						this->mainVAOManager->LoadModelIntoVAO("boxcollider", modelDrawInfo, shaderID);
+				}
+				boxCollider->minPosition = selectedGameObject->meshObject->minPoint;
+				boxCollider->maxPosition = selectedGameObject->meshObject->maxPoint;
+				selectedGameObject->components.push_back(boxCollider);
 			}
 		}
 
@@ -427,6 +704,66 @@ void SceneEditor::RenderScene(GLuint shaderID)
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void SceneEditor::DrawGizmos(GLFWwindow* window, GLuint shaderID, glm::mat4 matView, glm::mat4 matProjection, GameObject* gameObject,int index, int type)
+{
+	GLint mModel_location = glGetUniformLocation(shaderID, "mModel");
+	GLint mView_location = glGetUniformLocation(shaderID, "mView");
+	GLint mProjection_location = glGetUniformLocation(shaderID, "mProjection");
+	GLint mModelInverseTransform_location = glGetUniformLocation(shaderID, "mModelInverseTranspose");
+
+	if (type == 0)
+	{
+		glm::mat4 matModel = gameObject->matModel;
+
+		glm::mat4 matTranslation = glm::translate(glm::mat4(1.0),
+			gameObject->meshObject->centerPoint);
+
+		glm::mat4 matRoation = glm::mat4_cast(glm::quat(1, 0, 0, 0));
+
+		glm::mat4 matScale = glm::scale(glm::mat4(1.f), gameObject->meshObject->halfExtent);
+		matModel = matModel * matTranslation;
+
+		matModel = matModel * matRoation;
+
+		matModel = matModel * matScale;
+
+		glUniformMatrix4fv(mModel_location, 1, GL_FALSE, glm::value_ptr(matModel));
+		glUniformMatrix4fv(mView_location, 1, GL_FALSE, glm::value_ptr(matView));
+		glUniformMatrix4fv(mProjection_location, 1, GL_FALSE, glm::value_ptr(matProjection));
+
+		// Inverse transpose of a 4x4 matrix removes the right column and lower row
+		// Leaving only the rotation (the upper left 3x3 matrix values)
+		glm::mat4 mModelInverseTransform = glm::inverse(glm::transpose(matModel));
+		glUniformMatrix4fv(mModelInverseTransform_location, 1, GL_FALSE, glm::value_ptr(mModelInverseTransform));
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		GLint RGBA_COLOR_ULocID = glGetUniformLocation(shaderID, "RGBA_Colour");
+
+		glUniform4f(RGBA_COLOR_ULocID, 1.f,1.f,1.f,1.f);
+
+		GLint bUseRGBA_Color_ULocID = glGetUniformLocation(shaderID, "bUseRGBA_Colour");
+		
+		glUniform1f(bUseRGBA_Color_ULocID, (GLfloat)GL_TRUE);
+
+		GLint bDoNotLight_Colour_ULocID = glGetUniformLocation(shaderID, "bDoNotLight");
+		glUniform1f(bDoNotLight_Colour_ULocID, (GLfloat)GL_TRUE);
+
+		sModelDrawInfo drawingInformation;
+		if (mainVAOManager->FindDrawInfoByModelName("boxcollider", drawingInformation))
+		{
+			glBindVertexArray(drawingInformation.VAO_ID);
+
+			glDrawElements(GL_TRIANGLES,
+				drawingInformation.numberOfIndices,
+				GL_UNSIGNED_INT,
+				(void*)0);
+
+			glBindVertexArray(0);
+		}
+	}
 }
 
 void SceneEditor::ShutdownRender()
@@ -594,8 +931,12 @@ bool SceneEditor::LoadPlyFiles(std::string fileName, sModelDrawInfo& modelDrawIn
 		modelDrawInfo.pVertices[index].ny = pTheModelArray[index].ny;
 		modelDrawInfo.pVertices[index].nz = pTheModelArray[index].nz;
 	}
-
+	std::cout << fileName << " Min values: " << minPoints.x << ", "
+		<< minPoints.y << ", " << minPoints.z << "\nMax values: " << maxPoints.x << ", "
+		<< maxPoints.y << ", " << maxPoints.z << std::endl;
 	modelDrawInfo.numberOfIndices = modelDrawInfo.numberOfTriangles * 3;
+	modelDrawInfo.minValues = minPoints;
+	modelDrawInfo.maxValues = maxPoints;
 
 	modelDrawInfo.pIndices = new unsigned int[modelDrawInfo.numberOfIndices];
 
@@ -986,6 +1327,10 @@ bool SceneEditor::LoadSceneFile(cVAOManager* pVAOManager, GLuint shaderID)
 							::g_pTheLightManager->AddNewLightInfo(light);
 							::g_pTheLightManager->LoadLightUniformLocation(shaderID);
 						}
+						if (componentNodeName == "rigidbody")
+						{
+
+						}
 					}
 					
 				}
@@ -1281,6 +1626,53 @@ bool SceneEditor::SaveSceneFile()
 				intensityNode.append_child(pugi::node_pcdata).set_value(std::to_string(light->Intensity).c_str());
 				pugi::xml_node modeNode = lightNode.append_child("mode");
 				modeNode.append_child(pugi::node_pcdata).set_value(std::to_string(light->Mode).c_str());
+			}
+			if (component->componentType == "rigidbody")
+			{
+				RigidBody* rigidbody = (RigidBody*)component;
+				pugi::xml_node cameraNode = componentNode.append_child("rigidbody");
+				pugi::xml_node massNode = cameraNode.append_child("mass");
+				massNode.append_child(pugi::node_pcdata).set_value(std::to_string(rigidbody->mass).c_str());
+				pugi::xml_node accNode = cameraNode.append_child("acceleration");
+				{
+					pugi::xml_node xNode = accNode.append_child("x");
+					xNode.append_child(pugi::node_pcdata).set_value(std::to_string(rigidbody->acceleration.x).c_str());
+
+					pugi::xml_node yNode = accNode.append_child("y");
+					yNode.append_child(pugi::node_pcdata).set_value(std::to_string(rigidbody->acceleration.y).c_str());
+
+					pugi::xml_node zNode = accNode.append_child("z");
+					zNode.append_child(pugi::node_pcdata).set_value(std::to_string(rigidbody->acceleration.z).c_str());
+				}
+			}
+			if (component->componentType == "boxcollider")
+			{
+				BoxCollider* boxCollider = (BoxCollider*)component;
+				pugi::xml_node boxColliderNode = componentNode.append_child("boxcollider");
+				pugi::xml_node minPositionNode = boxColliderNode.append_child("minposition");
+				{
+					pugi::xml_node xNode = minPositionNode.append_child("x");
+					xNode.append_child(pugi::node_pcdata).set_value(
+						std::to_string(this->list_GameObjects[i]->transform->position.x).c_str());
+					pugi::xml_node yNode = minPositionNode.append_child("y");
+					yNode.append_child(pugi::node_pcdata).set_value(
+						std::to_string(this->list_GameObjects[i]->transform->position.y).c_str());
+					pugi::xml_node zNode = minPositionNode.append_child("z");
+					zNode.append_child(pugi::node_pcdata).set_value(
+						std::to_string(this->list_GameObjects[i]->transform->position.z).c_str());
+				}
+				pugi::xml_node maxPositionNode = boxColliderNode.append_child("maxposition");
+				{
+					pugi::xml_node xNode = maxPositionNode.append_child("x");
+					xNode.append_child(pugi::node_pcdata).set_value(
+						std::to_string(this->list_GameObjects[i]->transform->position.x).c_str());
+					pugi::xml_node yNode = maxPositionNode.append_child("y");
+					yNode.append_child(pugi::node_pcdata).set_value(
+						std::to_string(this->list_GameObjects[i]->transform->position.y).c_str());
+					pugi::xml_node zNode = maxPositionNode.append_child("z");
+					zNode.append_child(pugi::node_pcdata).set_value(
+						std::to_string(this->list_GameObjects[i]->transform->position.z).c_str());
+				}
 			}
 		}
 		if (this->list_GameObjects[i]->children.size())
