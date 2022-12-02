@@ -36,6 +36,9 @@ bool SceneEditor::InitSceneRender(GLFWwindow* window)
 
 void SceneEditor::ProcessInput(GLFWwindow* window)
 {
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		mouseClicked = true;
+	else mouseClicked = false;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 		mouseHoldDown = true;
 	else mouseHoldDown = false;
@@ -68,8 +71,8 @@ void SceneEditor::ProcessInput(GLFWwindow* window)
 
 void SceneEditor::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
+	xpos = static_cast<float>(xposIn);
+	ypos = static_cast<float>(yposIn);
 
 	if (firstMouse)
 	{
@@ -83,6 +86,11 @@ void SceneEditor::mouse_callback(GLFWwindow* window, double xposIn, double yposI
 
 	lastX = xpos;
 	lastY = ypos;
+	if (mouseClicked)
+	{
+		const glm::vec2 click(xpos, ypos);
+		ClickObject(click);
+	}
 	if (mouseHoldDown)
 		ProcessMouseMovement(xoffset, yoffset);
 }
@@ -704,6 +712,47 @@ void SceneEditor::RenderUI(GLuint shaderID)
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+bool SceneEditor::ClickObject(glm::vec2 pos)
+{
+	// 1. Cursor Position on the Screen
+	glm::vec3 cursorPositionOnScreenSpace(
+		pos.x,				// X is fine from left to right
+		SCR_HEIGHT - pos.y,	// Since Y is origin at the top, and positive as it goes down the screen
+							// we need to fix it like this.
+		1.f
+	);
+
+	// 2. Viewport: Window Information
+	glm::vec4 viewport = glm::vec4(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+	// 3 Projection Matrix
+	glm::mat4 projectionMatrix = glm::perspective(
+		glm::radians(45.0f),			// Field of View
+		(float)SCR_WIDTH / (float)SCR_HEIGHT,	// Aspect Ratio
+		0.1f,							// zNear plane
+		100.0f							// zFar plane
+	);
+
+	glm::mat4 viewMatrix = glm::lookAt(
+		EDITOR_CAMERA->transform->position,				// Position of the Camera
+		EDITOR_CAMERA->transform->position + cameraFront,			// Target view point
+		glm::vec3(0, 1, 0)				// Up direction
+	);
+	cursorPositionOnScreenSpace.x = SCR_WIDTH / 2;
+	cursorPositionOnScreenSpace.y = SCR_HEIGHT / 2;
+	// Calculate our position in world space
+	glm::vec3 pointInWorldSpace = glm::unProject(cursorPositionOnScreenSpace, viewMatrix, projectionMatrix, viewport);
+
+	Ray ray(EDITOR_CAMERA->transform->position, pointInWorldSpace);
+	GameObject* gameObject;
+	list_GameObjects[list_GameObjects.size() - 1]->transform->position = pointInWorldSpace;
+	if (this->physicsSystem.RayCastClosest(ray, &gameObject, list_GameObjects))
+	{
+		selectedGameObject = gameObject;
+	}
+	return false;
 }
 
 void SceneEditor::DrawGizmos(GLFWwindow* window, GLuint shaderID, glm::mat4 matView, glm::mat4 matProjection, GameObject* gameObject,int index, int type)
@@ -1329,10 +1378,108 @@ bool SceneEditor::LoadSceneFile(cVAOManager* pVAOManager, GLuint shaderID)
 						}
 						if (componentNodeName == "rigidbody")
 						{
-
+							RigidBody* rigidbody = new RigidBody();
+							pugi::xml_object_range<pugi::xml_node_iterator>
+								rigidbodyNodeChildren = componentNode.children();
+							for (pugi::xml_node_iterator rigidbodyNodeIterator = rigidbodyNodeChildren.begin();
+								rigidbodyNodeIterator != rigidbodyNodeChildren.end();
+								rigidbodyNodeIterator++)
+							{
+								pugi::xml_node rigidbodyNode = *rigidbodyNodeIterator;
+								std::string rigidbodyNodeName = rigidbodyNode.name();
+								if (rigidbodyNodeName == "acceleration")
+								{
+									pugi::xml_object_range<pugi::xml_node_iterator>
+										accelerationNodeChildren = rigidbodyNode.children();
+									for (pugi::xml_node_iterator accelerationNodeIterator = accelerationNodeChildren.begin();
+										accelerationNodeIterator != accelerationNodeChildren.end();
+										accelerationNodeIterator++)
+									{
+										pugi::xml_node accelerationNode = *accelerationNodeIterator;
+										std::string accelerationNodeName = accelerationNode.name();
+										if (accelerationNodeName == "x")
+											rigidbody->acceleration.x =
+											std::stof(accelerationNode.child_value());
+										if (accelerationNodeName == "y")
+											rigidbody->acceleration.y =
+											std::stof(accelerationNode.child_value());
+										if (accelerationNodeName == "z")
+											rigidbody->acceleration.z =
+											std::stof(accelerationNode.child_value());
+									}
+								}
+								if (rigidbodyNodeName == "mass")
+								{
+									rigidbody->mass =
+										std::stof(rigidbodyNode.child_value());
+								}
+							}
+							gameObject->components.push_back(rigidbody);
+							physicsSystem.m_GameObjects.push_back(gameObject);
+						}
+						if (componentNodeName == "boxcollider")
+						{
+							BoxCollider* boxCollider = new BoxCollider();
+							sModelDrawInfo modelDrawInfo;
+							if (!this->mainVAOManager->FindDrawInfoByModelName("boxcollider", modelDrawInfo))
+							{
+								if (this->LoadPlyFiles(boxCollider->box_model_path, modelDrawInfo))
+									this->mainVAOManager->LoadModelIntoVAO("boxcollider", modelDrawInfo, shaderID);
+							}
+							pugi::xml_object_range<pugi::xml_node_iterator>
+								boxColliderNodeChildren = componentNode.children();
+							for (pugi::xml_node_iterator boxColliderNodeIterator = boxColliderNodeChildren.begin();
+								boxColliderNodeIterator != boxColliderNodeChildren.end();
+								boxColliderNodeIterator++)
+							{
+								pugi::xml_node boxColliderNode = *boxColliderNodeIterator;
+								std::string boxColliderNodeName = boxColliderNode.name();
+								if (boxColliderNodeName == "minposition")
+								{
+									pugi::xml_object_range<pugi::xml_node_iterator>
+										minpositionNodeChildren = boxColliderNode.children();
+									for (pugi::xml_node_iterator minpositionNodeIterator = minpositionNodeChildren.begin();
+										minpositionNodeIterator != minpositionNodeChildren.end();
+										minpositionNodeIterator++)
+									{
+										pugi::xml_node minpositionNode = *minpositionNodeIterator;
+										std::string minpositionNodeName = minpositionNode.name();
+										if (minpositionNodeName == "x")
+											boxCollider->minPosition.x =
+											std::stof(minpositionNode.child_value());
+										if (minpositionNodeName == "y")
+											boxCollider->minPosition.y =
+											std::stof(minpositionNode.child_value());
+										if (minpositionNodeName == "z")
+											boxCollider->minPosition.z =
+											std::stof(minpositionNode.child_value());
+									}
+								}
+								if (boxColliderNodeName == "maxposition")
+								{
+									pugi::xml_object_range<pugi::xml_node_iterator>
+										maxpositionNodeChildren = boxColliderNode.children();
+									for (pugi::xml_node_iterator maxpositionNodeIterator = maxpositionNodeChildren.begin();
+										maxpositionNodeIterator != maxpositionNodeChildren.end();
+										maxpositionNodeIterator++)
+									{
+										pugi::xml_node maxpositionNode = *maxpositionNodeIterator;
+										std::string maxpositionNodeName = maxpositionNode.name();
+										if (maxpositionNodeName == "x")
+											boxCollider->maxPosition.x =
+											std::stof(maxpositionNode.child_value());
+										if (maxpositionNodeName == "y")
+											boxCollider->maxPosition.y =
+											std::stof(maxpositionNode.child_value());
+										if (maxpositionNodeName == "z")
+											boxCollider->maxPosition.z =
+											std::stof(maxpositionNode.child_value());
+									}
+								}
+							}
+							gameObject->components.push_back(boxCollider);
 						}
 					}
-					
 				}
 				if (nodeName == "meshobject")
 				{
@@ -1653,25 +1800,25 @@ bool SceneEditor::SaveSceneFile()
 				{
 					pugi::xml_node xNode = minPositionNode.append_child("x");
 					xNode.append_child(pugi::node_pcdata).set_value(
-						std::to_string(this->list_GameObjects[i]->transform->position.x).c_str());
+						std::to_string(this->list_GameObjects[i]->meshObject->minPoint.x).c_str());
 					pugi::xml_node yNode = minPositionNode.append_child("y");
 					yNode.append_child(pugi::node_pcdata).set_value(
-						std::to_string(this->list_GameObjects[i]->transform->position.y).c_str());
+						std::to_string(this->list_GameObjects[i]->meshObject->minPoint.y).c_str());
 					pugi::xml_node zNode = minPositionNode.append_child("z");
 					zNode.append_child(pugi::node_pcdata).set_value(
-						std::to_string(this->list_GameObjects[i]->transform->position.z).c_str());
+						std::to_string(this->list_GameObjects[i]->meshObject->minPoint.z).c_str());
 				}
 				pugi::xml_node maxPositionNode = boxColliderNode.append_child("maxposition");
 				{
 					pugi::xml_node xNode = maxPositionNode.append_child("x");
 					xNode.append_child(pugi::node_pcdata).set_value(
-						std::to_string(this->list_GameObjects[i]->transform->position.x).c_str());
+						std::to_string(this->list_GameObjects[i]->meshObject->maxPoint.x).c_str());
 					pugi::xml_node yNode = maxPositionNode.append_child("y");
 					yNode.append_child(pugi::node_pcdata).set_value(
-						std::to_string(this->list_GameObjects[i]->transform->position.y).c_str());
+						std::to_string(this->list_GameObjects[i]->meshObject->maxPoint.y).c_str());
 					pugi::xml_node zNode = maxPositionNode.append_child("z");
 					zNode.append_child(pugi::node_pcdata).set_value(
-						std::to_string(this->list_GameObjects[i]->transform->position.z).c_str());
+						std::to_string(this->list_GameObjects[i]->meshObject->maxPoint.z).c_str());
 				}
 			}
 		}

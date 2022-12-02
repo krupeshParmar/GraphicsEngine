@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PhysicsMath.h"
+#include <glm/vec3.hpp>
 
 #include <memory>
 
@@ -65,4 +66,19 @@ public:
 	Point B;
 	Point C;
 
+};
+
+class Ray {
+public:
+	Ray(const glm::vec3& p, const glm::vec3& d)
+		: origin(p), direction(d) {
+		
+		float m = 
+			sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+		direction.x /= m;
+		direction.y /= m;
+		direction.z /= m;
+	}
+	glm::vec3 origin;
+	glm::vec3 direction;
 };

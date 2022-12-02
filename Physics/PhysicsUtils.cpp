@@ -52,6 +52,62 @@ int TestSphereAABB(const Vector3 &center, float radius, AABB b)
 	return sqDist <= radius * radius;
 }
 
+// Test if ray r = p + td intersects sphere s
+// d must be a normalized vector!!!
+int TestRaySphere(const Point& p, const Vector3& d, const Point& center, float radius)
+{
+	Vector3 m = p - center;
+	float c = Dot(m, m) - radius * radius;
+
+	// If there is definitely at least one real root, there must be an intersection
+	if (c <= 0.0f) return 1;
+	float b = Dot(m, d);
+
+	// Early exit if ray origin outside sphere and ray pointing away from sphere
+	if (b > 0.0f) return 0;
+
+	float disc = b * b - c;
+
+	// A negative discriminant corresponds to ray missing sphere
+	if (disc < 0.0f) return 0;
+	printf("\nPoint in world space: %f %f %f",d.x, d.y, d.z);
+
+	// Now ray must hit sphere
+	return 1;
+}
+
+int TestRayAABB(const Ray& ray, AABB b, GameObject* debugObjec)
+{
+	/*point.x >= box.minX &&
+	point.x <= box.maxX &&
+	point.y >= box.minY &&
+	point.y <= box.maxY &&
+	point.z >= box.minZ &&
+	point.z <= box.maxZ*/
+
+	//debugObjec->transform->position = (ray.direction);
+	for (int i = 0; i < 100; i++)
+	{
+		glm::vec3 direction = ray.origin + ray.direction * glm::vec3(i * 0.1);
+		printf("\nPoint in world space: %f %f %f",
+			direction.x, direction.y, direction.z);
+		debugObjec->transform->position = direction;
+		if (
+			direction.x >= b.Min[0] &&
+			direction.x <= b.Max[0] &&
+			direction.y >= b.Min[1] &&
+			direction.y <= b.Max[1] &&
+			direction.z >= b.Min[2] &&
+			direction.z <= b.Max[2]
+		)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int TestTriangleAABB(Point v0, Point v1, Point v2, AABB b)
 {
 	return 1;

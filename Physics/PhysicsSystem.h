@@ -24,10 +24,13 @@ public:
 		return m_AABBStructure;
 	}
 
+	bool RayCastClosest(Ray ray,GameObject** gameObject, std::vector<GameObject*> listOfGameObjects);
 	bool CollisionTest(const Vector3& posA, iShape* shapeA, const Vector3& posB, iShape* shapeB);
 	bool CollisionTest(const Vector3& posA, Sphere* a, const Vector3& posB, Sphere* b);
 	bool CollisionTest(const Vector3& posA, Sphere* a, const Vector3& posB, AABB* b);
 	bool CollisionTest(const Vector3& posA, Sphere* a, const Vector3& posB, Triangle* b);
+	bool ClickedTest(const glm::vec2& pointA, const int &width, const int& height);
+	bool CollisionTest(const GameObject* gameObject, const GameObject* testGameObject);
 
 	//bool CollisionTest(AABB* a, Triangle* b);		// Not implementing
 	//bool CollisionTest(AABB* a, AABB* b);			// Not implementing

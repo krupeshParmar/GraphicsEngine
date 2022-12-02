@@ -43,12 +43,14 @@ public:
 	glm::vec3 WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraRight = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	const unsigned int SCR_WIDTH = 1920;
-	const unsigned int SCR_HEIGHT = 1080;
+	const unsigned int SCR_WIDTH = 1200;
+	const unsigned int SCR_HEIGHT = 800;
 
 	float YAW = 90.0f;
 	float PITCH = 0.0f;
 	float SENSITIVITY = 0.1f;
+	float xpos;
+	float ypos;
 
 	float deltaTime = 0.f;
 	float lastFrame = 0.f;
@@ -56,6 +58,7 @@ public:
 	float lastY = SCR_HEIGHT / 2.0f;
 	bool firstMouse = true;
 	bool mouseHoldDown = false;
+	bool mouseClicked = false;
 
 	void GamePlayUpdate(GLFWwindow* window);
 	bool gamePlay = false;
@@ -67,6 +70,7 @@ public:
 	void DrawGizmos(GLFWwindow* window, GLuint shaderID, glm::mat4 matView, glm::mat4 matProjection, GameObject* gameObject, int index, int type);
 	void RenderScene(GLFWwindow* window,GLuint shaderID);
 	void RenderUI(GLuint shaderID);
+	bool ClickObject(glm::vec2 pos);
 
 	void CreateNewGameObject();
 	GameObject* CreateNewGameObject(std::string name);

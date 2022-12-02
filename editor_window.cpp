@@ -64,6 +64,11 @@ void key_callback(GLFWwindow* window,
 	int key, int scancode,
 	int action, int mods)
 {
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	{
+		std::cout << "Clicked!" << std::endl;
+		theSceneEditor.ClickObject(glm::vec2(theSceneEditor.xpos,theSceneEditor.ypos));
+	}
 	if (key == GLFW_KEY_F && action == GLFW_PRESS)
 	{
 		if (theSceneEditor.selectedGameObject != nullptr)
@@ -103,7 +108,7 @@ int main()
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-	//glfwSetKeyCallback(window, key_callback);
+	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -150,7 +155,7 @@ int main()
 	::g_pTheLightManager->LoadLightUniformLocation(shaderID);
 
 	cVAOManager* pVAOManager = new cVAOManager();
-	theSceneEditor.sceneFileName = "Scenes/GraphicsProject1.xml";
+	theSceneEditor.sceneFileName = "Scenes/PhysicsFinal.xml";
 	if (theSceneEditor.LoadSceneFile(pVAOManager, shaderID))
 	{
 		std::cout << "Scene successfully loaded!" << std::endl;

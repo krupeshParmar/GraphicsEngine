@@ -3,6 +3,8 @@
 #include "../System/Components/RigidBody.h"
 #include "../System/Components/BoxCollider.h"
 #include <iostream>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 PhysicsSystem::PhysicsSystem() {
 }
@@ -154,23 +156,14 @@ void PhysicsSystem::Update(float time)
 				a.minY <= b.maxY &&
 				a.maxY >= b.minY &&
 				a.minZ <= b.maxZ &&
-				a.maxZ >= b.minZ*/
-			glm::vec3 a_min = gameObject->meshObject->minPoint + gameObject->transform->position;
-			glm::vec3 a_max = gameObject->meshObject->maxPoint + gameObject->transform->position;
-			glm::vec3 b_min = testGameObject->meshObject->minPoint + testGameObject->transform->position;
-			glm::vec3 b_max = testGameObject->meshObject->maxPoint + testGameObject->transform->position;
+				a.maxZ >= b.minZ*//*
 			std::cout << "A min: " << a_min.x << ", " << a_min.y << ", " << a_min.z << std::endl;
 			std::cout << "A max: " << a_max.x << ", " << a_max.y << ", " << a_max.z << std::endl;
 			std::cout << "B min: " << b_min.x << ", " << b_min.y << ", " << b_min.z << std::endl;
 			std::cout << "B max: " << b_max.x << ", " << b_max.y << ", " << b_max.z << std::endl;
-			if (
-				(a_min.x <= b_max.x &&
-				a_max.x >= b_min.x) &&
-				(a_min.y <= b_max.y &&
-				a_max.y >= b_min.y) &&
-				(a_min.z <= b_max.z &&
-				a_max.z >= b_min.z)
-				)
+			*/
+
+			if ( CollisionTest(gameObject,testGameObject) )
 			{
 				gameObject->OnCollisionEnter(testGameObject);
 			}
@@ -178,9 +171,80 @@ void PhysicsSystem::Update(float time)
 	}
 }
 
+bool PhysicsSystem::ClickedTest(const glm::vec2& pointA, const int& width, const int& height)
+{
+	
+	return false;
+}
+
+bool PhysicsSystem::CollisionTest(const GameObject* gameObject, const GameObject* testGameObject)
+{
+	glm::vec3 a_min = gameObject->meshObject->minPoint + gameObject->transform->position;
+	glm::vec3 a_max = gameObject->meshObject->maxPoint + gameObject->transform->position;
+	glm::vec3 b_min = testGameObject->meshObject->minPoint + testGameObject->transform->position;
+	glm::vec3 b_max = testGameObject->meshObject->maxPoint + testGameObject->transform->position;
+
+	if (
+		(a_min.x <= b_max.x &&
+			a_max.x >= b_min.x) &&
+		(a_min.y <= b_max.y &&
+			a_max.y >= b_min.y) &&
+		(a_min.z <= b_max.z &&
+			a_max.z >= b_min.z)
+		)
+	{
+		return true;
+	}
+	return false;
+}
+
 void PhysicsSystem::AddTriangleToAABBCollisionCheck(int hash, Triangle* triangle)
 {
 	m_AABBStructure[hash].push_back(triangle);
+}
+
+bool PhysicsSystem::RayCastClosest(Ray ray, GameObject** gameObject, std::vector<GameObject*> listOfGameObjects)
+{
+	GameObject* closestGameObject = nullptr;
+	float closestDistance = FLT_MAX;
+
+	for (GameObject* itGameObject: listOfGameObjects)
+	{
+		if (itGameObject == listOfGameObjects[listOfGameObjects.size() - 1])
+			continue;
+		float max[3] = {
+				itGameObject->meshObject->maxPoint.x + itGameObject->transform->position.x,
+				itGameObject->meshObject->maxPoint.y + itGameObject->transform->position.y,
+				itGameObject->meshObject->maxPoint.z + itGameObject->transform->position.z
+		};
+		float min[3] = {
+					itGameObject->meshObject->minPoint.x + itGameObject->transform->position.x,
+					itGameObject->meshObject->minPoint.y + itGameObject->transform->position.y,
+					itGameObject->meshObject->minPoint.z + itGameObject->transform->position.z
+		};
+		AABB aabb(min, max);
+		/*if (TestRaySphere(ray.origin,ray.direction,itGameObject->transform->position + itGameObject->meshObject->centerPoint, .5f))
+		{
+			float distance = glm::distance(ray.origin, itGameObject->transform->position);
+			if (closestDistance > distance)
+			{
+				closestGameObject = itGameObject;
+				closestDistance = distance;
+			}
+		}*/
+
+		if (TestRayAABB(ray, aabb,listOfGameObjects[listOfGameObjects.size()-1]))
+		{
+			float distance = glm::distance(ray.origin, itGameObject->transform->position);
+			if (closestDistance > distance)
+			{
+				closestGameObject = itGameObject;
+				closestDistance = distance;
+			}
+		}
+	}
+	*gameObject = closestGameObject;
+	return closestGameObject != nullptr;
 }
 
 bool PhysicsSystem::CollisionTest(const Vector3& posA, iShape* shapeA, const Vector3& posB, iShape* shapeB)
