@@ -24,7 +24,7 @@
     <ProjectGuid>{309aa615-3498-4169-b879-20161f0337c9}</ProjectGuid>
     <RootNamespace>Project1</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>GraphicsProject1</ProjectName>
+    <ProjectName>GraphicsEngine</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -73,19 +73,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>$(SolutionDir)lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>$(SolutionDir)lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir)include;$(SolutionDir)dev\inc;$(SolutionDir)include\imgui;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)lib\Debug_x64;$(LibraryPath);$(SolutionDir)dev\lib\$(Configuration)</LibraryPath>
+    <LibraryPath>$(SolutionDir)lib\x64;$(SolutionDir)lib\Debug_x64;$(LibraryPath);$(SolutionDir)dev\lib\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SolutionDir)include;$(SolutionDir)dev\inc;$(SolutionDir)include\imgui;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)lib/Release_x64;$(LibraryPath);$(SolutionDir)dev\lib\$(Configuration);$(SolutionDir)dev\lib\$(Configuration)</LibraryPath>
+    <LibraryPath>$(SolutionDir)lib\x64;$(SolutionDir)lib/Release_x64;$(LibraryPath);$(SolutionDir)dev\lib\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -97,6 +99,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -113,6 +116,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -146,6 +150,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyController.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="System\Components\RigidBody.cpp" />
+    <ClCompile Include="System\Components\BoxCollider.cpp" />
     <ClCompile Include="include\imgui\imgui.cpp" />
     <ClCompile Include="include\imgui\imgui_demo.cpp" />
     <ClCompile Include="include\imgui\imgui_draw.cpp" />
@@ -154,7 +163,7 @@
     <ClCompile Include="include\imgui\imgui_tables.cpp" />
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="include\imgui\misc\imgui_stdlib.cpp" />
-    <ClCompile Include="PhysicsSimulation.cpp" />
+    <ClCompile Include="Physics\PhysicsSimulation.cpp" />
     <ClCompile Include="Physics\PhysicsDebugRenderer.cpp" />
     <ClCompile Include="Physics\PhysicsMath.cpp" />
     <ClCompile Include="Physics\PhysicsObject.cpp" />
@@ -181,6 +190,11 @@
     <ClCompile Include="VAOManager\VAOManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyController.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="System\Components\RigidBody.h" />
+    <ClInclude Include="System\Components\BoxCollider.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
     <ClInclude Include="include\imgui\imgui.h" />
     <ClInclude Include="include\imgui\imgui_impl_glfw.h" />
@@ -190,9 +204,9 @@
     <ClInclude Include="include\imgui\imstb_textedit.h" />
     <ClInclude Include="include\imgui\imstb_truetype.h" />
     <ClInclude Include="include\imgui\misc\imgui_stdlib.h" />
-    <ClInclude Include="PhysicsSimulation.h" />
+    <ClInclude Include="Physics\PhysicsSimulation.h" />
     <ClInclude Include="Physics\Ball.h" />
-    <ClInclude Include="Physics\BoundingBox.h" />
+    <ClInclude Include="Physics\BoundingBox\BoundingBox.h" />
     <ClInclude Include="Physics\PhysicsDebugRenderer.h" />
     <ClInclude Include="Physics\PhysicsMath.h" />
     <ClInclude Include="Physics\PhysicsObject.h" />

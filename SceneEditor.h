@@ -18,6 +18,9 @@
 #include <imgui/misc/imgui_stdlib.h>
 #include "System/Components/BoxCollider.h"
 #include "Physics/PhysicsSystem.h"
+#include "Player.h"
+#include "Enemy.h"
+#include "EnemyController.h"
 
 class SceneEditor
 {
@@ -29,6 +32,7 @@ public:
 	std::vector<GameObject*> list_GameObjects;
 	static GameObject* EDITOR_CAMERA;
 	static GameObject* selectedGameObject;
+	GameObject* mainCamera;
 
 	std::string sceneName;
 	cVAOManager* mainVAOManager;
@@ -43,8 +47,8 @@ public:
 	glm::vec3 WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraRight = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	const unsigned int SCR_WIDTH = 1200;
-	const unsigned int SCR_HEIGHT = 800;
+	int SCR_WIDTH = 1200;
+	int SCR_HEIGHT = 800;
 
 	float YAW = 90.0f;
 	float PITCH = 0.0f;
@@ -69,8 +73,10 @@ public:
 
 	void DrawGizmos(GLFWwindow* window, GLuint shaderID, glm::mat4 matView, glm::mat4 matProjection, GameObject* gameObject, int index, int type);
 	void RenderScene(GLFWwindow* window,GLuint shaderID);
-	void RenderUI(GLuint shaderID);
+	void RenderUI(GLFWwindow* window,GLuint shaderID);
 	bool ClickObject(glm::vec2 pos);
+	void InitGameScene();
+	void FinishGameScene();
 
 	void CreateNewGameObject();
 	GameObject* CreateNewGameObject(std::string name);
@@ -83,5 +89,9 @@ public:
 	void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 	void ProcessInput(GLFWwindow* window);
 	void ProcessMouseMovement(float xoffset, float yoffset);
+
+	// Physics Game Stuff
+	Player* player = new Player();
+	EnemyController enemyController;
 };
 

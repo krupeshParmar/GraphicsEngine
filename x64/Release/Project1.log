@@ -1,9 +1,9 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(514,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (FrameworksMidTerm22.vcxproj, Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  SceneEditor.cpp
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\SceneEditor.cpp(246,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(514,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (FrameworksMidTerm22.vcxproj, GraphicsProject1.vcxproj, Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  editor_window.cpp
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\editor_window.cpp(182,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Generating code
-  1 of 2853 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  1 of 2384 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     20 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Project1.vcxproj -> D:\KPsDocuments\GDP1\Graphics\Projects\Project1\x64\Release\GraphicsProject1.exe
+  Project1.vcxproj -> D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\x64\Release\GraphicsEngine.exe

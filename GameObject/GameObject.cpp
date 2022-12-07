@@ -21,7 +21,16 @@ void GameObject::Update()
 
 void GameObject::OnCollisionEnter(GameObject* otherGameObject)
 {
-	std::cout << this->name << " collided with " << otherGameObject->name;
+	if (this->name == "bullet")
+	{
+		this->collided = true;
+		if (otherGameObject->name == "enemy")
+		{
+			otherGameObject->collided = true;
+			otherGameObject->meshObject->bUse_RGBA_color = true;
+			otherGameObject->meshObject->RGBA_color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+		}
+	}
 }
 
 GameObject::GameObject()

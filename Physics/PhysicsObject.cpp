@@ -87,7 +87,12 @@ void PhysicsObject::Integrate(float dt) {
 	prevPosition = position;
 	position.addScaledVector(velocity, dt);
 
-	//velocity *= damping;
+	velocity *= damping;
+	if (position.y <= 1.f)
+	{
+		position.y = 1.f;
+		velocity.y = abs(velocity.y);
+	}
 }
 
 void PhysicsObject::ApplyForce(const Vector3& direction) {

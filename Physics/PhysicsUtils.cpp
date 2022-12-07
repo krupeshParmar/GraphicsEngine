@@ -76,7 +76,7 @@ int TestRaySphere(const Point& p, const Vector3& d, const Point& center, float r
 	return 1;
 }
 
-int TestRayAABB(const Ray& ray, AABB b, GameObject* debugObjec)
+int TestRayAABB(const Ray& ray, AABB b)
 {
 	/*point.x >= box.minX &&
 	point.x <= box.maxX &&
@@ -86,12 +86,12 @@ int TestRayAABB(const Ray& ray, AABB b, GameObject* debugObjec)
 	point.z <= box.maxZ*/
 
 	//debugObjec->transform->position = (ray.direction);
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 10000; i++)
 	{
 		glm::vec3 direction = ray.origin + ray.direction * glm::vec3(i * 0.1);
-		printf("\nPoint in world space: %f %f %f",
-			direction.x, direction.y, direction.z);
-		debugObjec->transform->position = direction;
+		/*printf("\nPoint in world space: %f %f %f",
+			direction.x, direction.y, direction.z);*/
+
 		if (
 			direction.x >= b.Min[0] &&
 			direction.x <= b.Max[0] &&

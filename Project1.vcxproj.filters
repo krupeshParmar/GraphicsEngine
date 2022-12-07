@@ -108,7 +108,7 @@
     <ClCompile Include="include\imgui\misc\imgui_stdlib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicsSimulation.cpp">
+    <ClCompile Include="Physics\PhysicsSimulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Physics\PhysicsDebugRenderer.cpp">
@@ -136,6 +136,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Physics\Vector3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="System\Components\BoxCollider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="System\Components\RigidBody.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -206,13 +221,13 @@
     <ClInclude Include="include\imgui\misc\imgui_stdlib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicsSimulation.h">
+    <ClInclude Include="Physics\PhysicsSimulation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Physics\Ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Physics\BoundingBox.h">
+    <ClInclude Include="Physics\BoundingBox\BoundingBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Physics\PhysicsDebugRenderer.h">
@@ -240,6 +255,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Physics\Vector3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="System\Components\BoxCollider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="System\Components\RigidBody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

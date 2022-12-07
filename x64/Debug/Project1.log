@@ -1,19 +1,17 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(514,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  PhysicsSimulation.cpp
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(15,36): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(16,36): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(17,30): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(109,46): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(111,21): warning C4018: '<': signed/unsigned mismatch
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(137,42): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(448,19): warning C4018: '<': signed/unsigned mismatch
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(450,20): warning C4018: '<': signed/unsigned mismatch
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(493,20): warning C4018: '<': signed/unsigned mismatch
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(443,24): warning C4101: 'unused2': unreferenced local variable
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\PhysicsSimulation.cpp(443,15): warning C4101: 'unused1': unreferenced local variable
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(514,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (GraphicsProject1.vcxproj, Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   SceneEditor.cpp
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\SceneEditor.cpp(237,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  editor_window.cpp
-D:\KPsDocuments\GDP1\Graphics\Projects\Project1\editor_window.cpp(183,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  Generating Code...
-  Project1.vcxproj -> D:\KPsDocuments\GDP1\Graphics\Projects\Project1\x64\Debug\GraphicsProject1.exe
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(217,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(448,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(448,40): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(602,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(824,44): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(825,45): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+  Project1.vcxproj -> D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\x64\Debug\GraphicsEngine.exe

@@ -54,13 +54,13 @@ void PhysicsSystem::UpdateStep(float duration) {
 
 	}
 
+	/*
 	// Detect collisions
 	PhysicsObject *physObjA, *physObjB;
 
 	iShape *shapeA, *shapeB;
 
 	bool collision;
-
 	for (int i = 0; i < numPhysicsObjects - 1; i++) {
 		physObjA = m_PhysicsObjects[i];
 		shapeA = physObjA->pShape;
@@ -94,6 +94,7 @@ void PhysicsSystem::UpdateStep(float duration) {
 			}
 		}
 	}
+	*/
 
 	for (int i = 0; i < numPhysicsObjects; i++) {
 		m_PhysicsObjects[i]->KillAllForces();
@@ -210,7 +211,12 @@ bool PhysicsSystem::RayCastClosest(Ray ray, GameObject** gameObject, std::vector
 
 	for (GameObject* itGameObject: listOfGameObjects)
 	{
-		if (itGameObject == listOfGameObjects[listOfGameObjects.size() - 1])
+		if (
+			!itGameObject->enabled ||
+			itGameObject->name == "sphere" ||
+			itGameObject->name == "player" ||
+			itGameObject->name == "Camera"
+			)
 			continue;
 		float max[3] = {
 				itGameObject->meshObject->maxPoint.x + itGameObject->transform->position.x,
@@ -233,7 +239,7 @@ bool PhysicsSystem::RayCastClosest(Ray ray, GameObject** gameObject, std::vector
 			}
 		}*/
 
-		if (TestRayAABB(ray, aabb,listOfGameObjects[listOfGameObjects.size()-1]))
+		if (TestRayAABB(ray, aabb))
 		{
 			float distance = glm::distance(ray.origin, itGameObject->transform->position);
 			if (closestDistance > distance)

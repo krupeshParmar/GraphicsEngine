@@ -46,6 +46,7 @@
 #include "System/Components/Camera.h"
 #include "SceneEditor.h"
 #include "System/AudioManager.h"
+#include "Player.h"
 
 SceneEditor theSceneEditor;
 const unsigned int SCR_WIDTH = 1920;
@@ -64,11 +65,11 @@ void key_callback(GLFWwindow* window,
 	int key, int scancode,
 	int action, int mods)
 {
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	/*if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
 	{
 		std::cout << "Clicked!" << std::endl;
 		theSceneEditor.ClickObject(glm::vec2(theSceneEditor.xpos,theSceneEditor.ypos));
-	}
+	}*/
 	if (key == GLFW_KEY_F && action == GLFW_PRESS)
 	{
 		if (theSceneEditor.selectedGameObject != nullptr)
@@ -101,7 +102,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL 
 	glfwSetErrorCallback(error_callback);
-
+	
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Scene view", nullptr, nullptr);
 	if (!window)
 	{
@@ -161,8 +162,6 @@ int main()
 		std::cout << "Scene successfully loaded!" << std::endl;
 	}
 	else std::cout << "Scene failed to load!" << std::endl;
-
-
 	theSceneEditor.RenderScene(window, shaderID);
 
 	

@@ -38,5 +38,8 @@ public:
 	void GetRotation(glm::vec3* rotation);
 	void GetScale(glm::vec3* scale);
 
+	// physics project stuff
+	bool collided = false;
+
 };
 

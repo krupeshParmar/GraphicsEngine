@@ -36,34 +36,54 @@ bool SceneEditor::InitSceneRender(GLFWwindow* window)
 
 void SceneEditor::ProcessInput(GLFWwindow* window)
 {
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS && gamePlay)
+	{
+		gamePlay = false;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		FinishGameScene();
+		std::cout << "Gameplay finished";
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS
+		|| glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	{
+		const glm::vec2 click(xpos, ypos);
+
+		ClickObject(click);
 		mouseClicked = true;
+	}
 	else mouseClicked = false;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 		mouseHoldDown = true;
 	else mouseHoldDown = false;
 
-	if (mouseHoldDown)
+	if (mouseHoldDown || gamePlay)
 	{
+		glm::vec3 defFront = cameraFront;
+		if (gamePlay)
+			defFront.y = 0.f;
 		float cameraSpeed;
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && !gamePlay)
 			cameraSpeed = 10.5f * deltaTime;
 		else  cameraSpeed = 2.5f * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			EDITOR_CAMERA->transform->position += cameraSpeed * cameraFront;
+			mainCamera->transform->position += cameraSpeed * defFront;
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			EDITOR_CAMERA->transform->position -= cameraSpeed * cameraFront;
+			mainCamera->transform->position -= cameraSpeed * defFront;
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			EDITOR_CAMERA->transform->position -= cameraRight * cameraSpeed;
+			mainCamera->transform->position -= cameraRight * cameraSpeed;
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			EDITOR_CAMERA->transform->position += cameraRight * cameraSpeed;
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     // Down
+			mainCamera->transform->position += cameraRight * cameraSpeed;
+
+		if (!gamePlay)
 		{
-			SceneEditor::EDITOR_CAMERA->transform->position.y -= cameraSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)      // Up
-		{
-			SceneEditor::EDITOR_CAMERA->transform->position.y += cameraSpeed;
+			if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     // Down
+			{
+				mainCamera->transform->position.y -= cameraSpeed;
+			}
+			if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)      // Up
+			{
+				mainCamera->transform->position.y += cameraSpeed;
+			}
 		}
 	}
 }
@@ -86,12 +106,12 @@ void SceneEditor::mouse_callback(GLFWwindow* window, double xposIn, double yposI
 
 	lastX = xpos;
 	lastY = ypos;
-	if (mouseClicked)
-	{
-		const glm::vec2 click(xpos, ypos);
-		ClickObject(click);
-	}
-	if (mouseHoldDown)
+	//if (mouseClicked)
+	//{
+	//	/*const glm::vec2 click(xpos, ypos);
+	//	ClickObject(click);*/
+	//}
+	if (mouseHoldDown || gamePlay)
 		ProcessMouseMovement(xoffset, yoffset);
 }
 
@@ -176,11 +196,14 @@ void SceneEditor::DeleteGameObjects(std::vector<GameObject*> gameobjectList)
 
 void SceneEditor::GamePlayUpdate(GLFWwindow* window)
 {
-	
+	player->Update(deltaTime);
+	enemyController.Update();
+	physicsSystem.UpdateStep(deltaTime);
 }
 
 void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 {
+	glfwGetWindowSize(window,&SCR_WIDTH, &SCR_HEIGHT);
 	GLint mvp_location = glGetUniformLocation(shaderID, "MVP");
 	GLint mModel_location = glGetUniformLocation(shaderID, "mModel");
 	GLint mView_location = glGetUniformLocation(shaderID, "mView");
@@ -194,7 +217,8 @@ void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 		float currentFfame = glfwGetTime();
 		deltaTime = currentFfame - lastFrame;
 		lastFrame = currentFfame;
-		if (!gamePlay) ProcessInput(window);
+
+		ProcessInput(window);
 
 		::g_pTheLightManager->CopyLightInformationToShader(shaderID);
 
@@ -214,13 +238,14 @@ void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 
 		glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
-		matView = glm::lookAt(EDITOR_CAMERA->transform->position,
-			EDITOR_CAMERA->transform->position + cameraFront,
+
+		matView = glm::lookAt(mainCamera->transform->position,
+			mainCamera->transform->position + cameraFront,
 			upVector);
 
 		GLint eyeLocation_UniLoc = glGetUniformLocation(shaderID, "eyeLocation");
-		glUniform4f(eyeLocation_UniLoc, EDITOR_CAMERA->transform->position.x,
-			EDITOR_CAMERA->transform->position.y, EDITOR_CAMERA->transform->position.z, 1.0f);
+		glUniform4f(eyeLocation_UniLoc, mainCamera->transform->position.x,
+			mainCamera->transform->position.y, mainCamera->transform->position.z, 1.0f);
 
 		matProjection = glm::perspective(
 			0.6f,
@@ -329,6 +354,8 @@ void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 				glBindVertexArray(0);
 			}
 
+			if (gamePlay)
+				continue;
 			for (int c = 0; c < currentGameObject->components.size(); c++)
 			{
 				if (currentGameObject->components[c]->componentType == "boxcollider")
@@ -338,7 +365,7 @@ void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 			}
 		}
 		this->physicsSystem.Update(deltaTime);
-		this->RenderUI(shaderID);
+		this->RenderUI(window,shaderID);
 		if (gamePlay)
 		{
 			GamePlayUpdate(window);
@@ -347,9 +374,9 @@ void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 		glfwPollEvents();
 		std::stringstream ssTitle;
 		ssTitle << "Camera (x,y,z): "
-			<< EDITOR_CAMERA->transform->position.x << ", "
-			<< EDITOR_CAMERA->transform->position.y << ", "
-			<< EDITOR_CAMERA->transform->position.z;
+			<< mainCamera->transform->position.x << ", "
+			<< mainCamera->transform->position.y << ", "
+			<< mainCamera->transform->position.z;
 
 		std::string theText = ssTitle.str();
 
@@ -358,7 +385,22 @@ void SceneEditor::RenderScene(GLFWwindow* window, GLuint shaderID)
 	
 }
 
-void SceneEditor::RenderUI(GLuint shaderID)
+void SceneEditor::InitGameScene()
+{
+	GameObject* camera = GetGameObjectByName("Camera");
+	if (camera != nullptr)
+	{
+		mainCamera = camera;
+		mainCamera->transform->position = glm::vec3(0, 2, 0);
+	}
+}
+void SceneEditor::FinishGameScene()
+{
+	mainCamera = EDITOR_CAMERA;
+	GameObject* gameObject = GetGameObjectByName("player");
+}
+
+void SceneEditor::RenderUI(GLFWwindow* window,GLuint shaderID)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -376,7 +418,45 @@ void SceneEditor::RenderUI(GLuint shaderID)
 	ImGui::Begin("Hierarchy");
 	ImGui::BeginChild("##pauseplay", ImVec2(100, 30));
 	ImGui::Checkbox("GamePlay##gameplay", &gamePlay);
+	if (ImGui::IsItemEdited())
+	{
+		if (gamePlay)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			InitGameScene();
+			std::cout << "Gameplay stareted";
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			FinishGameScene();
+			std::cout << "Gameplay finished";
+		}
+	}
 	ImGui::EndChild();
+	if (gamePlay)
+	{
+
+		/*int dwWidth = SCR_WIDTH / 2;
+		int dwHeight = SCR_HEIGHT / 2;
+		ImGui::SetNextWindowPos(ImVec2(dwWidth - 20, dwHeight - 20), ImGuiCond_Always, ImVec2(1.f, 1.f));
+		ImGui::Begin("CrossHair");
+		ImGui::BeginChild("##CrossHair", ImVec2(10, 10));
+		ImGui::Text("X");
+		ImGui::EndChild();
+		ImGui::End();*/
+		ImVec2 window_pos = ImVec2(SCR_WIDTH / 2, SCR_HEIGHT / 2);
+		ImVec2 window_size =
+			ImGui::GetIO().DisplaySize;
+		ImVec2 window_center = ImVec2(window_pos.x + window_size.x * 0.1f, window_pos.y + window_size.y * 0.1f);
+		
+		ImGui::GetForegroundDrawList()->AddCircle(window_center, window_size.y * 0.1f, IM_COL32(0, 255, 0, 200), 0, 10);
+
+		ImGui::End();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		return;
+	}
 	ImGui::BeginGroup();
 	ImGui::BeginChild("##scene", ImVec2(1920 * 0.15, 0));
 	ImGui::Button("Save");
@@ -710,6 +790,7 @@ void SceneEditor::RenderUI(GLuint shaderID)
 		ImGui::EndChild();
 	}
 	ImGui::End();
+	ImGui::ShowDemoWindow();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -719,11 +800,11 @@ bool SceneEditor::ClickObject(glm::vec2 pos)
 	// 1. Cursor Position on the Screen
 	glm::vec3 cursorPositionOnScreenSpace(
 		pos.x,				// X is fine from left to right
-		SCR_HEIGHT - pos.y,	// Since Y is origin at the top, and positive as it goes down the screen
+		pos.y,				// Since Y is origin at the top, and positive as it goes down the screen
 							// we need to fix it like this.
 		1.f
 	);
-
+	
 	// 2. Viewport: Window Information
 	glm::vec4 viewport = glm::vec4(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
@@ -736,8 +817,8 @@ bool SceneEditor::ClickObject(glm::vec2 pos)
 	);
 
 	glm::mat4 viewMatrix = glm::lookAt(
-		EDITOR_CAMERA->transform->position,				// Position of the Camera
-		EDITOR_CAMERA->transform->position + cameraFront,			// Target view point
+		mainCamera->transform->position,				// Position of the Camera
+		mainCamera->transform->position + cameraFront,			// Target view point
 		glm::vec3(0, 1, 0)				// Up direction
 	);
 	cursorPositionOnScreenSpace.x = SCR_WIDTH / 2;
@@ -745,12 +826,20 @@ bool SceneEditor::ClickObject(glm::vec2 pos)
 	// Calculate our position in world space
 	glm::vec3 pointInWorldSpace = glm::unProject(cursorPositionOnScreenSpace, viewMatrix, projectionMatrix, viewport);
 
-	Ray ray(EDITOR_CAMERA->transform->position, pointInWorldSpace);
+	Ray ray(mainCamera->transform->position, pointInWorldSpace);
 	GameObject* gameObject;
-	list_GameObjects[list_GameObjects.size() - 1]->transform->position = pointInWorldSpace;
+
 	if (this->physicsSystem.RayCastClosest(ray, &gameObject, list_GameObjects))
 	{
-		selectedGameObject = gameObject;
+		if (gamePlay)
+		{
+			if (gameObject->name == "enemy")
+			{
+				enemyController.ShootEnemy(gameObject);
+				std::cout << "Killed " << gameObject->name << std::endl;
+			}
+		}
+		//selectedGameObject = gameObject;
 	}
 	return false;
 }
@@ -1566,6 +1655,7 @@ bool SceneEditor::LoadSceneFile(cVAOManager* pVAOManager, GLuint shaderID)
 			if (gameObject->name == "EDITOR_CAMERA")
 			{
 				SceneEditor::EDITOR_CAMERA = gameObject;
+				mainCamera = EDITOR_CAMERA;
 				continue;
 			}
 			if (childrenNames.size() > 0)
@@ -1583,6 +1673,10 @@ bool SceneEditor::LoadSceneFile(cVAOManager* pVAOManager, GLuint shaderID)
 			list_GameObjects.push_back(gameObject);
 		}
 	}
+
+	player->player = GetGameObjectByName("Camera");
+	player->bullet = GetGameObjectByName("bullet");
+	enemyController.Initialize(list_GameObjects, &physicsSystem);
 	return true;
 }
 

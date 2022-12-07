@@ -6,9 +6,9 @@
 		<components>
 			<transform>
 				<position>
-					<x>-5.073541</x>
-					<y>3.282193</y>
-					<z>5.077458</z>
+					<x>-2.510066</x>
+					<y>2.802654</y>
+					<z>-8.713832</z>
 				</position>
 				<rotation>
 					<x>0.000000</x>
@@ -80,18 +80,18 @@
 		</meshobject>
 	</gameobject>
 	<gameobject>
-		<name>ninja</name>
+		<name>player</name>
 		<enabled>1</enabled>
 		<components>
 			<transform>
 				<position>
 					<x>0.000000</x>
-					<y>0.000000</y>
+					<y>-2.000000</y>
 					<z>0.000000</z>
 				</position>
 				<rotation>
 					<x>0.000000</x>
-					<y>3.100000</y>
+					<y>0.000000</y>
 					<z>0.000000</z>
 				</rotation>
 				<scale>
@@ -142,7 +142,7 @@
 			<transform>
 				<position>
 					<x>0.000000</x>
-					<y>0.000000</y>
+					<y>-100.000000</y>
 					<z>0.000000</z>
 				</position>
 				<rotation>
@@ -208,14 +208,14 @@
 		</meshobject>
 	</gameobject>
 	<gameobject>
-		<name>box</name>
+		<name>enemy</name>
 		<enabled>1</enabled>
 		<components>
 			<transform>
 				<position>
 					<x>5.000000</x>
 					<y>1.000000</y>
-					<z>0.000000</z>
+					<z>1.000000</z>
 				</position>
 				<rotation>
 					<x>0.000000</x>
@@ -257,7 +257,7 @@
 			<rgba>
 				<r>1.000000</r>
 				<g>0.000000</g>
-				<b>0.500000</b>
+				<b>0.000000</b>
 				<a>1.000000</a>
 			</rgba>
 			<wireframe>0</wireframe>
@@ -265,7 +265,7 @@
 	</gameobject>
 	<gameobject>
 		<name>bullet</name>
-		<enabled>1</enabled>
+		<enabled>0</enabled>
 		<components>
 			<transform>
 				<position>
@@ -325,9 +325,9 @@
 		<components>
 			<transform>
 				<position>
-					<x>0.000000</x>
-					<y>0.000000</y>
-					<z>0.000000</z>
+					<x>-10.402328</x>
+					<y>6.729478</y>
+					<z>-94.620735</z>
 				</position>
 				<rotation>
 					<x>0.000000</x>
@@ -350,6 +350,81 @@
 				<r>1.000000</r>
 				<g>0.000000</g>
 				<b>1.000000</b>
+				<a>1.000000</a>
+			</rgba>
+			<wireframe>0</wireframe>
+		</meshobject>
+	</gameobject>
+	<gameobject>
+		<name>Camera</name>
+		<enabled>1</enabled>
+		<components>
+			<transform>
+				<position>
+					<x>0.000000</x>
+					<y>2.000000</y>
+					<z>0.000000</z>
+				</position>
+				<rotation>
+					<x>0.000000</x>
+					<y>3.100000</y>
+					<z>0.000000</z>
+				</rotation>
+				<scale>
+					<x>1.000000</x>
+					<y>1.000000</y>
+					<z>1.000000</z>
+				</scale>
+			</transform>
+		</components>
+		<children>
+			<name>player</name>
+		</children>
+		<meshobject>
+			<name></name>
+			<path></path>
+			<nuselight>0</nuselight>
+			<usergba>0</usergba>
+			<rgba>
+				<r>0.000000</r>
+				<g>0.000000</g>
+				<b>0.000000</b>
+				<a>1.000000</a>
+			</rgba>
+			<wireframe>0</wireframe>
+		</meshobject>
+	</gameobject>
+	<gameobject>
+		<name>enemy</name>
+		<enabled>1</enabled>
+		<components>
+			<transform>
+				<position>
+					<x>0.000000</x>
+					<y>1.000000</y>
+					<z>10.000000</z>
+				</position>
+				<rotation>
+					<x>0.000000</x>
+					<y>0.000000</y>
+					<z>0.000000</z>
+				</rotation>
+				<scale>
+					<x>1.000000</x>
+					<y>1.000000</y>
+					<z>1.000000</z>
+				</scale>
+			</transform>
+		</components>
+		<meshobject>
+			<name>box</name>
+			<path></path>
+			<nuselight>0</nuselight>
+			<usergba>1</usergba>
+			<rgba>
+				<r>1.000000</r>
+				<g>0.000000</g>
+				<b>0.000000</b>
 				<a>1.000000</a>
 			</rgba>
 			<wireframe>0</wireframe>
