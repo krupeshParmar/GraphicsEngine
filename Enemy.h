@@ -15,4 +15,5 @@ public:
 	void Kill();
 	double time = 0;
 	bool canMove = false;
+	float speed = 10.f;
 };

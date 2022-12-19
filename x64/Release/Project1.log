@@ -1,9 +1,41 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(514,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (FrameworksMidTerm22.vcxproj, GraphicsProject1.vcxproj, Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  EnemyController.cpp
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\EnemyController.cpp(6,19): warning C4244: 'argument': conversion from 'double' to 'unsigned int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\EnemyController.cpp(18,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\EnemyController.cpp(18,17): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\EnemyController.cpp(50,37): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\EnemyController.cpp(69,37): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  Explosives.cpp
+  PhysicsSimulation.cpp
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\Shapes.h(76,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(15,36): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(16,36): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(17,30): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(109,46): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(111,21): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(137,42): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(423,19): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(425,20): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(458,20): warning C4018: '<': signed/unsigned mismatch
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(418,24): warning C4101: 'unused2': unreferenced local variable
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\Physics\PhysicsSimulation.cpp(418,15): warning C4101: 'unused1': unreferenced local variable
+  SceneEditor.cpp
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(243,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(621,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(844,44): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\SceneEditor.cpp(845,45): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
   editor_window.cpp
-D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\editor_window.cpp(182,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Generating code
-  1 of 2384 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  7 of 3476 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    20 functions had inline decision re-evaluated but remain unchanged
+    77 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> D:\KPsDocuments\GDP1\Graphics\Projects\GraphicsEngine\x64\Release\GraphicsEngine.exe

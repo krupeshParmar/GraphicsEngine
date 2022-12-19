@@ -28,7 +28,6 @@ void GameObject::OnCollisionEnter(GameObject* otherGameObject)
 		{
 			otherGameObject->collided = true;
 			otherGameObject->meshObject->bUse_RGBA_color = true;
-			otherGameObject->meshObject->RGBA_color = glm::vec4(1.f, 1.f, 1.f, 1.f);
 		}
 	}
 }

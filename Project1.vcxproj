@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EnemyController.cpp" />
+    <ClCompile Include="Explosives.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="System\Components\RigidBody.cpp" />
     <ClCompile Include="System\Components\BoxCollider.cpp" />
@@ -192,6 +193,7 @@
   <ItemGroup>
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="EnemyController.h" />
+    <ClInclude Include="Explosives.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="System\Components\RigidBody.h" />
     <ClInclude Include="System\Components\BoxCollider.h" />

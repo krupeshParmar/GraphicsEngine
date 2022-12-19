@@ -14,13 +14,13 @@ void Enemy::Update()
 		return;
 
 	if (
-		this->enemy->transform->position.x < this->wayPoint.GetGLM().x + 1 
+		this->enemy->transform->position.x <= this->wayPoint.x + 1 
 			&&
-		this->enemy->transform->position.x > this->wayPoint.GetGLM().x - 1 
+		this->enemy->transform->position.x >= this->wayPoint.x - 1 
 			&& 
-		this->enemy->transform->position.z < this->wayPoint.GetGLM().z + 1
+		this->enemy->transform->position.z <= this->wayPoint.z + 1
 			&& 
-		this->enemy->transform->position.z > this->wayPoint.GetGLM().z - 1
+		this->enemy->transform->position.z >= this->wayPoint.z - 1
 		)
 	{
 		if (glfwGetTime() - this->time > 5.f)
@@ -35,11 +35,11 @@ void Enemy::Update()
 			this->wayPoint.z - this->physicsObject->GetPosition().z
 		);
 		direction.Normalize();
-		this->physicsObject->ApplyForce(direction * 10.f);
+		this->physicsObject->ApplyForce(direction * speed);
 		this->time = glfwGetTime();
+		this->enemy->transform->position = this->physicsObject->GetPosition().GetGLM();
 	}
 
-	this->enemy->transform->position = this->physicsObject->GetPosition().GetGLM();
 }
 
 void Enemy::Kill()

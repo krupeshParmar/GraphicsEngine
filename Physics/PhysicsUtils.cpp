@@ -86,7 +86,7 @@ int TestRayAABB(const Ray& ray, AABB b)
 	point.z <= box.maxZ*/
 
 	//debugObjec->transform->position = (ray.direction);
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 1000; i++)
 	{
 		glm::vec3 direction = ray.origin + ray.direction * glm::vec3(i * 0.1);
 		/*printf("\nPoint in world space: %f %f %f",

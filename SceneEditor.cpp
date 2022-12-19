@@ -11,6 +11,9 @@ GameObject* SceneEditor::selectedGameObject = nullptr;
 SceneEditor::SceneEditor()
 {
 	SceneEditor::EDITOR_CAMERA = new GameObject();
+	controlsText = "\n\tUse WASD to Move Player";
+	controlsText += "\n\tLeft click to kill enemy";
+	controlsText += "\n\tHold down right click and hover over an enemy for 5 seconds to kill";
 }
 
 SceneEditor::~SceneEditor()
@@ -46,10 +49,12 @@ void SceneEditor::ProcessInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS
 		|| glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
-		const glm::vec2 click(xpos, ypos);
-
-		ClickObject(click);
-		mouseClicked = true;
+		if (!mouseClicked)
+		{
+			const glm::vec2 click(xpos, ypos);
+			ClickObject(click, false);
+			mouseClicked = true;
+		}
 	}
 	else mouseClicked = false;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
@@ -73,6 +78,21 @@ void SceneEditor::ProcessInput(GLFWwindow* window)
 			mainCamera->transform->position -= cameraRight * cameraSpeed;
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 			mainCamera->transform->position += cameraRight * cameraSpeed;
+		
+		if (gamePlay)
+		{
+			if (mainCamera->transform->position.x > XMAX)
+				mainCamera->transform->position.x = XMAX;
+
+			if (mainCamera->transform->position.x < XMIN)
+				mainCamera->transform->position.x = XMIN;
+
+			if (mainCamera->transform->position.z > ZMAX)
+				mainCamera->transform->position.z = ZMAX;
+
+			if (mainCamera->transform->position.z < ZMIN)
+				mainCamera->transform->position.z = ZMIN;
+		}
 
 		if (!gamePlay)
 		{
@@ -106,6 +126,15 @@ void SceneEditor::mouse_callback(GLFWwindow* window, double xposIn, double yposI
 
 	lastX = xpos;
 	lastY = ypos;
+	if (mouseHoldDown && gamePlay)
+	{
+		const glm::vec2 click(xpos, ypos);
+		ClickObject(click, true);
+	}
+	else {
+		lastTracedGameObject = nullptr;
+		hoverTime = glfwGetTime();
+	}
 	//if (mouseClicked)
 	//{
 	//	/*const glm::vec2 click(xpos, ypos);
@@ -406,12 +435,12 @@ void SceneEditor::RenderUI(GLFWwindow* window,GLuint shaderID)
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	ImGui::Begin("Log");
-	ImGui::BeginChild("##log", ImVec2(600, 100));
+	ImGui::BeginChild("##log", ImVec2(600, 50));
 	ImGui::Text(logMessages.c_str());
 	ImGui::EndChild();
 	ImGui::End();
 	ImGui::Begin("Controls");
-	ImGui::BeginChild("##controls", ImVec2(1200, 150));
+	ImGui::BeginChild("##controls", ImVec2(1200, 50));
 	ImGui::Text(controlsText.c_str());
 	ImGui::EndChild();
 	ImGui::End();
@@ -436,21 +465,14 @@ void SceneEditor::RenderUI(GLFWwindow* window,GLuint shaderID)
 	ImGui::EndChild();
 	if (gamePlay)
 	{
-
-		/*int dwWidth = SCR_WIDTH / 2;
-		int dwHeight = SCR_HEIGHT / 2;
-		ImGui::SetNextWindowPos(ImVec2(dwWidth - 20, dwHeight - 20), ImGuiCond_Always, ImVec2(1.f, 1.f));
-		ImGui::Begin("CrossHair");
-		ImGui::BeginChild("##CrossHair", ImVec2(10, 10));
-		ImGui::Text("X");
-		ImGui::EndChild();
-		ImGui::End();*/
-		ImVec2 window_pos = ImVec2(SCR_WIDTH / 2, SCR_HEIGHT / 2);
 		ImVec2 window_size =
 			ImGui::GetIO().DisplaySize;
-		ImVec2 window_center = ImVec2(window_pos.x + window_size.x * 0.1f, window_pos.y + window_size.y * 0.1f);
+		ImVec2 window_center = ImVec2(window_size.x * 0.5f, window_size.y * 0.5f);
 		
-		ImGui::GetForegroundDrawList()->AddCircle(window_center, window_size.y * 0.1f, IM_COL32(0, 255, 0, 200), 0, 10);
+		ImGui::GetForegroundDrawList()
+			->AddCircleFilled(
+				window_center, window_size.y * 0.01f, IM_COL32(100, 255, 0, 150), 0
+			);
 
 		ImGui::End();
 		ImGui::Render();
@@ -790,12 +812,11 @@ void SceneEditor::RenderUI(GLFWwindow* window,GLuint shaderID)
 		ImGui::EndChild();
 	}
 	ImGui::End();
-	ImGui::ShowDemoWindow();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-bool SceneEditor::ClickObject(glm::vec2 pos)
+bool SceneEditor::ClickObject(glm::vec2 pos, bool hover)
 {
 	// 1. Cursor Position on the Screen
 	glm::vec3 cursorPositionOnScreenSpace(
@@ -810,10 +831,10 @@ bool SceneEditor::ClickObject(glm::vec2 pos)
 
 	// 3 Projection Matrix
 	glm::mat4 projectionMatrix = glm::perspective(
-		glm::radians(45.0f),			// Field of View
+		0.6f,			// Field of View
 		(float)SCR_WIDTH / (float)SCR_HEIGHT,	// Aspect Ratio
 		0.1f,							// zNear plane
-		100.0f							// zFar plane
+		10000.0f							// zFar plane
 	);
 
 	glm::mat4 viewMatrix = glm::lookAt(
@@ -821,6 +842,7 @@ bool SceneEditor::ClickObject(glm::vec2 pos)
 		mainCamera->transform->position + cameraFront,			// Target view point
 		glm::vec3(0, 1, 0)				// Up direction
 	);
+
 	cursorPositionOnScreenSpace.x = SCR_WIDTH / 2;
 	cursorPositionOnScreenSpace.y = SCR_HEIGHT / 2;
 	// Calculate our position in world space
@@ -835,8 +857,28 @@ bool SceneEditor::ClickObject(glm::vec2 pos)
 		{
 			if (gameObject->name == "enemy")
 			{
-				enemyController.ShootEnemy(gameObject);
-				std::cout << "Killed " << gameObject->name << std::endl;
+				if (lastTracedGameObject != gameObject)
+				{
+					lastTracedGameObject = gameObject;
+					hoverTime = glfwGetTime();
+				}
+
+				if (hover && glfwGetTime() - hoverTime >= 5.f && lastTracedGameObject != nullptr)
+				{
+					enemyController.ShootEnemy(gameObject, &list_GameObjects, &physicsSystem);
+					score++;
+					logMessages = "\n\tScore: " + std::to_string(score);
+					logMessages += "\n\n\tKilled using hover";
+					std::cout << "Killed " << gameObject->name << " using hover" << std::endl;
+				}
+				if (!hover)
+				{
+					enemyController.ShootEnemy(gameObject, &list_GameObjects, &physicsSystem);
+					std::cout << "Killed " << gameObject->name << " using click" << std::endl;
+					score++;
+					logMessages = "\n\tScore: " + std::to_string(score);
+					logMessages += "\n\n\tKilled using click";
+				}
 			}
 		}
 		//selectedGameObject = gameObject;
@@ -1627,13 +1669,26 @@ bool SceneEditor::LoadSceneFile(cVAOManager* pVAOManager, GLuint shaderID)
 						}
 					}
 					sModelDrawInfo modelDrawInfo;
-					if(this->LoadPlyFiles(meshObject->path, modelDrawInfo))
+					if (this->LoadPlyFiles(meshObject->path, modelDrawInfo))
+					{
 						pVAOManager->LoadModelIntoVAO(meshObject->meshName, modelDrawInfo, shaderID);
-					meshObject->minPoint = modelDrawInfo.minValues;
-					meshObject->maxPoint = modelDrawInfo.maxValues;
-					meshObject->halfExtent = (meshObject->maxPoint - meshObject->minPoint) / 2.f;
-					meshObject->centerPoint = meshObject->minPoint + meshObject->halfExtent;
-					gameObject->meshObject = meshObject;
+						meshObject->minPoint = modelDrawInfo.minValues;
+						meshObject->maxPoint = modelDrawInfo.maxValues;
+						meshObject->halfExtent = (meshObject->maxPoint - meshObject->minPoint) / 2.f;
+						meshObject->centerPoint = meshObject->minPoint + meshObject->halfExtent;
+						gameObject->meshObject = meshObject;
+					}
+					else
+					{
+						if (pVAOManager->FindDrawInfoByModelName(meshObject->meshName, modelDrawInfo))
+						{
+							meshObject->minPoint = modelDrawInfo.minValues;
+							meshObject->maxPoint = modelDrawInfo.maxValues;
+							meshObject->halfExtent = (meshObject->maxPoint - meshObject->minPoint) / 2.f;
+							meshObject->centerPoint = meshObject->minPoint + meshObject->halfExtent;
+							gameObject->meshObject = meshObject;
+						}
+					}
 				}
 				if (nodeName == "children")
 				{

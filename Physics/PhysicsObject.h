@@ -35,11 +35,11 @@ public:
 
 	BoundingBox* pBoundingBox;
 	iShape* pShape;
+	Vector3 position;
 
 private:
 	friend class PhysicsSystem;
 
-	Vector3 position;
 	Vector3 prevPosition;
 	Vector3 velocity;
 	Vector3 acceleration;

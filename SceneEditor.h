@@ -33,6 +33,8 @@ public:
 	static GameObject* EDITOR_CAMERA;
 	static GameObject* selectedGameObject;
 	GameObject* mainCamera;
+	GameObject* lastTracedGameObject = nullptr;
+	double hoverTime = 0;
 
 	std::string sceneName;
 	cVAOManager* mainVAOManager;
@@ -74,7 +76,7 @@ public:
 	void DrawGizmos(GLFWwindow* window, GLuint shaderID, glm::mat4 matView, glm::mat4 matProjection, GameObject* gameObject, int index, int type);
 	void RenderScene(GLFWwindow* window,GLuint shaderID);
 	void RenderUI(GLFWwindow* window,GLuint shaderID);
-	bool ClickObject(glm::vec2 pos);
+	bool ClickObject(glm::vec2 pos, bool hover = false);
 	void InitGameScene();
 	void FinishGameScene();
 
@@ -93,5 +95,6 @@ public:
 	// Physics Game Stuff
 	Player* player = new Player();
 	EnemyController enemyController;
+	int score = 0;
 };
 

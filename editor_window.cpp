@@ -3,7 +3,9 @@
 *	Student number:	1124374
 *	Student mail:	k_parmar180076@fanshaweonline.ca
 *	Program name:	GAME DEVELOPMENT ADVANCED PROGRAMMING
-*	Course name:	
+*	Course name:	Physics & Simulation 1
+* 
+*	Project 3: First Person Aim Practice
 *	
 *	a) How to build this project:
 *		- Select x64 platform
