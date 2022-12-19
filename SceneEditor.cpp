@@ -58,8 +58,20 @@ void SceneEditor::ProcessInput(GLFWwindow* window)
 	}
 	else mouseClicked = false;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	{
 		mouseHoldDown = true;
-	else mouseHoldDown = false;
+		if (gamePlay)
+		{
+			const glm::vec2 click(xpos, ypos);
+			ClickObject(click, true);
+		}
+	}
+	else
+	{
+		mouseHoldDown = false; 
+		lastTracedGameObject = nullptr;
+		hoverTime = glfwGetTime();
+	}
 
 	if (mouseHoldDown || gamePlay)
 	{
@@ -126,15 +138,12 @@ void SceneEditor::mouse_callback(GLFWwindow* window, double xposIn, double yposI
 
 	lastX = xpos;
 	lastY = ypos;
-	if (mouseHoldDown && gamePlay)
+	/*if (mouseHoldDown && gamePlay)
 	{
 		const glm::vec2 click(xpos, ypos);
 		ClickObject(click, true);
-	}
-	else {
-		lastTracedGameObject = nullptr;
-		hoverTime = glfwGetTime();
-	}
+	}*/
+	
 	//if (mouseClicked)
 	//{
 	//	/*const glm::vec2 click(xpos, ypos);
@@ -861,9 +870,10 @@ bool SceneEditor::ClickObject(glm::vec2 pos, bool hover)
 				{
 					lastTracedGameObject = gameObject;
 					hoverTime = glfwGetTime();
+					std::cout << "new enemy traced" << std::endl;
 				}
 
-				if (hover && glfwGetTime() - hoverTime >= 5.f && lastTracedGameObject != nullptr)
+				if (hover && glfwGetTime() - hoverTime >= 5.f && lastTracedGameObject == gameObject)
 				{
 					enemyController.ShootEnemy(gameObject, &list_GameObjects, &physicsSystem);
 					score++;
